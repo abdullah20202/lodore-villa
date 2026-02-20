@@ -1,0 +1,209 @@
+{
+  "info": {
+    "_postman_id": "lodore-villa-collection-v1",
+    "name": "Lodore Villa — VIP Booking API",
+    "description": "Complete API test collection for Lodore Villa VIP booking system.\n\n**Execution Order:**\n1. Request OTP (sets `requestId` automatically)\n2. Verify OTP (sets `access_token` and `refresh_token` automatically)\n3. Me (protected — uses `access_token`)\n4. Refresh Token (updates `access_token`)\n5. Calendly Webhook Test\n\n**Setup:**\n- Import this collection AND the `LodoreVilla.postman_environment.json`\n- Select the `Lodore Villa Local` environment\n- Set `phone` to a phone number that exists in your VIP list\n- Run requests in order",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [],
+  "item": [
+    {
+      "name": "1 — Request OTP",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const resp = pm.response.json();",
+              "",
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('ok is true', () => pm.expect(resp.ok).to.be.true);",
+              "pm.test('requestId present', () => pm.expect(resp.requestId).to.be.a('string'));",
+              "",
+              "if (resp.requestId) {",
+              "    pm.environment.set('requestId', resp.requestId);",
+              "    console.log('requestId saved:', resp.requestId);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"{{phone}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/request-otp",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "request-otp"]
+        },
+        "description": "Request an OTP for a VIP phone number.\n\nExpected responses:\n- `200 {ok: true, requestId: '...'}` — VIP phone found, OTP sent\n- `403 {ok: false}` — phone not in VIP list (generic message)\n- `429` — rate limited"
+      },
+      "response": []
+    },
+    {
+      "name": "2 — Verify OTP",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const resp = pm.response.json();",
+              "",
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('ok is true', () => pm.expect(resp.ok).to.be.true);",
+              "pm.test('access token present', () => pm.expect(resp.access).to.be.a('string'));",
+              "pm.test('refresh token present', () => pm.expect(resp.refresh).to.be.a('string'));",
+              "",
+              "if (resp.access) {",
+              "    pm.environment.set('access_token', resp.access);",
+              "    console.log('access_token saved');",
+              "}",
+              "if (resp.refresh) {",
+              "    pm.environment.set('refresh_token', resp.refresh);",
+              "    console.log('refresh_token saved');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"{{phone}}\",\n  \"requestId\": \"{{requestId}}\",\n  \"code\": \"{{otp_code}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/verify-otp",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "verify-otp"]
+        },
+        "description": "Verify the OTP code.\n\nSet `otp_code` in the environment to the code you received via SMS.\n\nExpected responses:\n- `200 {ok: true, access: '...', refresh: '...'}` — success\n- `400 {ok: false, message: '...', attemptsRemaining: N}` — wrong code\n- `429` — too many attempts"
+      },
+      "response": []
+    },
+    {
+      "name": "3 — Me (Protected)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const resp = pm.response.json();",
+              "",
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('ok is true', () => pm.expect(resp.ok).to.be.true);",
+              "pm.test('phone present', () => pm.expect(resp.phone).to.be.a('string'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/auth/me",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "me"]
+        },
+        "description": "Returns the authenticated phone number.\nRequires valid `access_token` in Authorization header.\n\nExpected: `200 {ok: true, phone: '05xxxxxxxx'}`"
+      },
+      "response": []
+    },
+    {
+      "name": "4 — Refresh Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const resp = pm.response.json();",
+              "",
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('ok is true', () => pm.expect(resp.ok).to.be.true);",
+              "pm.test('new access token present', () => pm.expect(resp.access).to.be.a('string'));",
+              "",
+              "if (resp.access) {",
+              "    pm.environment.set('access_token', resp.access);",
+              "    console.log('access_token refreshed');",
+              "}",
+              "if (resp.refresh) {",
+              "    pm.environment.set('refresh_token', resp.refresh);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/token/refresh",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "token", "refresh"]
+        },
+        "description": "Exchange a refresh token for a new access token.\n\nExpected: `200 {ok: true, access: '...', refresh: '...'}`"
+      },
+      "response": []
+    },
+    {
+      "name": "5 — Calendly Webhook Test",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('received is true', () => {",
+              "    const resp = pm.response.json();",
+              "    pm.expect(resp.received).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-Webhook-Secret", "value": "{{calendly_webhook_secret}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event\": \"invitee.created\",\n  \"time\": \"2025-03-01T19:30:00.000000Z\",\n  \"payload\": {\n    \"event_type\": {\n      \"uuid\": \"TEST_EVENT_TYPE_UUID\",\n      \"kind\": \"One-on-One\",\n      \"slug\": \"lodore-iftar\",\n      \"name\": \"إفطار لودور فيلا\",\n      \"duration\": 60,\n      \"owner\": {\n        \"type\": \"User\",\n        \"uuid\": \"TEST_OWNER_UUID\"\n      }\n    },\n    \"event\": {\n      \"uuid\": \"TEST_EVENT_UUID\",\n      \"assigned_to\": [\"host@lodore.com\"],\n      \"extended_assigned_to\": [],\n      \"start_time\": \"2025-03-01T19:30:00.000000Z\",\n      \"start_time_pretty\": \"7:30pm - Saturday, March 1, 2025\",\n      \"invitees_counter\": {\n        \"total\": 1,\n        \"active\": 1,\n        \"limit\": 1\n      }\n    },\n    \"invitee\": {\n      \"uuid\": \"TEST_INVITEE_UUID\",\n      \"first_name\": \"محمد\",\n      \"last_name\": \"علي\",\n      \"name\": \"محمد علي\",\n      \"email\": \"test@example.com\",\n      \"text_reminder_number\": null,\n      \"timezone\": \"Asia/Riyadh\",\n      \"created_at\": \"2025-02-15T10:00:00.000000Z\",\n      \"is_reschedule\": false,\n      \"payments\": [],\n      \"canceled\": false,\n      \"questions_and_answers\": [\n        {\n          \"question\": \"رقم الجوال\",\n          \"answer\": \"{{phone}}\",\n          \"position\": 0\n        }\n      ],\n      \"tracking\": {\n        \"utm_campaign\": null,\n        \"utm_source\": null,\n        \"utm_medium\": null,\n        \"utm_content\": \"{{phone}}\",\n        \"utm_term\": null,\n        \"salesforce_uuid\": null\n      },\n      \"cancel_url\": \"https://calendly.com/cancellations/TEST\",\n      \"reschedule_url\": \"https://calendly.com/reschedulings/TEST\"\n    },\n    \"questions_and_answers\": [\n      {\n        \"question\": \"رقم الجوال\",\n        \"answer\": \"{{phone}}\",\n        \"position\": 0\n      }\n    ],\n    \"tracking\": {\n      \"utm_campaign\": null,\n      \"utm_source\": null,\n      \"utm_medium\": null,\n      \"utm_content\": \"{{phone}}\",\n      \"utm_term\": null\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/calendly/webhook",
+          "host": ["{{base_url}}"],
+          "path": ["api", "calendly", "webhook"]
+        },
+        "description": "Simulates a Calendly `invitee.created` webhook event.\n\nRequires `X-Webhook-Secret` header matching `CALENDLY_WEBHOOK_SECRET` env var.\nThe `phone` variable (from environment) must be a VIP phone in the database.\n\nOn success: `{received: true}` and the VIPPhone record will be updated to `booked=true`."
+      },
+      "response": []
+    }
+  ]
+}
