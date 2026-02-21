@@ -134,6 +134,11 @@ CORS_ALLOWED_ORIGINS = config(
 ).split(",")
 CORS_ALLOW_CREDENTIALS = True
 
+# --- CSRF ---
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS", default="https://villa.lodore.com"
+).split(",")
+
 # --- Unifonic ---
 UNIFONIC_APP_SID = config("UNIFONIC_APP_SID", default="")
 UNIFONIC_API_KEY = config("UNIFONIC_API_KEY", default="")
