@@ -6,8 +6,8 @@
  * On success → /otp (with phone + requestId in location state)
  * On failure → /sorry
  */
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { requestOTP } from "../api/auth";
 import Logo from "../components/Logo";
 
@@ -24,9 +24,18 @@ function normalizePhone(raw) {
 
 export default function VerifyPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [rawPhone, setRawPhone] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Auto-fill phone from URL parameter
+  useEffect(() => {
+    const phoneParam = searchParams.get("phone");
+    if (phoneParam) {
+      setRawPhone(phoneParam);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -127,10 +136,17 @@ export default function VerifyPage() {
               Kindly reserve your private appointment and allow us the honor of receiving
               you in a setting worthy of your presence.
             </p>
+             <div className="gold-divider my-5" />
+
             <p className="text-xs font-semibold mt-4" style={{ color: "#2C2416" }}>
-              Sultan Alsheaibi, L'Odore
+              Sultan Alsheaibi
             </p>
+             <p className="text-xs text-left mt-0.5" style={{ color: "#2C2416" }}>
+             L'Odore
+          </p>
           </div>
+                    <div className="gold-divider my-5" />
+
         </div>
 
         {/* Phone verification card */}

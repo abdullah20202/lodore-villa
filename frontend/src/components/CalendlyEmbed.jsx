@@ -1,37 +1,13 @@
 /**
- * CalendlyEmbed — direct iframe with prefill.
+ * CalendlyEmbed — Using official react-calendly library
  *
- * Calendly prefill query params:
- *   name        → prefills the Name field
- *   email       → prefills the Email field
- *   a1          → prefills the 1st custom question (e.g. Phone Number)
- *   a2          → prefills the 2nd custom question
- *   utm_content → passed to webhook for VIP identification
- *
- * If your phone question is not the 1st custom question, change a1 → a2 etc.
+ * Provides better control over embed settings including:
+ *   - Cookie/GDPR banner hiding
+ *   - Custom styling
+ *   - Prefill data
  */
 import React from "react";
-
-function buildUrl(base, phone) {
-  try {
-    const url = new URL(base);
-
-    if (phone) {
-      // Prefill the phone into the first custom question field (a1)
-      // Change to a2, a3 etc. if your phone question is not first
-      url.searchParams.set("a1", phone);
-
-      // Also pass via utm_content for backend webhook extraction
-      url.searchParams.set("utm_content", phone);
-    }
-
-    url.searchParams.set("hide_gdpr_banner", "1");
-    url.searchParams.set("hide_cookie_banner", "1");
-    return url.toString();
-  } catch {
-    return base;
-  }
-}
+import { InlineWidget } from "react-calendly";
 
 export default function CalendlyEmbed({ phone = "" }) {
   const baseUrl = import.meta.env.VITE_CALENDLY_EVENT_URL || "";
@@ -47,13 +23,29 @@ export default function CalendlyEmbed({ phone = "" }) {
   }
 
   return (
-    <iframe
-      src={buildUrl(baseUrl, phone)}
-      width="100%"
-      height="700"
-      frameBorder="0"
-      title="Lodore Villa Booking"
-      style={{ minWidth: "320px", border: "none" }}
+    <InlineWidget
+      url={baseUrl}
+      styles={{
+        height: "700px",
+        minWidth: "320px",
+      }}
+      pageSettings={{
+        backgroundColor: "ffffff",
+        hideEventTypeDetails: false,
+        hideLandingPageDetails: false,
+        primaryColor: "c4955a",
+        textColor: "2c2416",
+        hideGdprBanner: true,
+        timeFormat: "12h",
+      }}
+      prefill={{
+        customAnswers: {
+          a1: phone, // Prefill phone in first custom question
+        },
+      }}
+      utm={{
+        utmContent: phone, // Pass phone for webhook
+      }}
     />
   );
 }

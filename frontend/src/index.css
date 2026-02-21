@@ -95,3 +95,12 @@ body {
     radial-gradient(ellipse 40% 30% at 80% 100%, rgba(196,149,90,0.04) 0%, transparent 60%);
   min-height: 100vh;
 }
+
+/* Prevent iOS zoom on input focus */
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

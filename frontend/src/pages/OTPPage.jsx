@@ -35,9 +35,36 @@ export default function OTPPage() {
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN);
   const [resending, setResending] = useState(false);
   const timerRef = useRef(null);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     startCooldown();
+
+    // WebOTP API for auto-filling OTP from SMS
+    if ('OTPCredential' in window) {
+      const ac = new AbortController();
+
+      navigator.credentials.get({
+        otp: { transport: ['sms'] },
+        signal: ac.signal
+      }).then(otp => {
+        if (otp && otp.code) {
+          setCode(otp.code);
+          // Auto-submit if code is valid
+          if (otp.code.length >= 4) {
+            handleVerify(new Event('submit'));
+          }
+        }
+      }).catch(err => {
+        console.log('WebOTP error:', err);
+      });
+
+      return () => {
+        ac.abort();
+        clearInterval(timerRef.current);
+      };
+    }
+
     return () => clearInterval(timerRef.current);
   }, []);
 
@@ -154,6 +181,7 @@ export default function OTPPage() {
                 رمز التحقق
               </label>
               <input
+                ref={inputRef}
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
