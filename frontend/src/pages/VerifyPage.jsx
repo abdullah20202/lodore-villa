@@ -11,10 +11,22 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { requestOTP } from "../api/auth";
 import Logo from "../components/Logo";
 
+/** Convert Arabic numerals to English */
+function convertArabicToEnglish(str) {
+  const arabicNumerals = '٠١٢٣٤٥٦٧٨٩';
+  const englishNumerals = '0123456789';
+  return str.split('').map(char => {
+    const index = arabicNumerals.indexOf(char);
+    return index !== -1 ? englishNumerals[index] : char;
+  }).join('');
+}
+
 /** Client-side phone normalizer (mirrors backend logic) */
 function normalizePhone(raw) {
   if (!raw) return null;
-  let phone = raw.replace(/[\s\-\(\)]/g, "").trim();
+  // Convert Arabic numerals to English first
+  let phone = convertArabicToEnglish(raw);
+  phone = phone.replace(/[\s\-\(\)]/g, "").trim();
   if (phone.startsWith("+")) phone = phone.slice(1);
   if (phone.startsWith("966")) phone = "0" + phone.slice(3);
   if (/^5\d{8}$/.test(phone)) phone = "0" + phone;

@@ -32,19 +32,42 @@ export default function CalendlyEmbed({ phone = "" }) {
       Intl.DateTimeFormat.supportedLocalesOf = OriginalDateTimeFormat.supportedLocalesOf;
     }
 
-    // Replace "Baghdad" with "Riyadh" in the DOM
+    // Replace "Baghdad" with "Riyadh" in the DOM using MutationObserver
     const replaceTimezone = () => {
-      const elements = document.querySelectorAll("*");
-      elements.forEach(el => {
-        if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3 && el.textContent?.includes("Baghdad")) {
-          el.textContent = el.textContent.replace("Baghdad", "Riyadh");
+      // Try to replace in all text nodes
+      const walker = document.createTreeWalker(
+        document.body,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+      );
+
+      let node;
+      while (node = walker.nextNode()) {
+        if (node.nodeValue && node.nodeValue.includes("Baghdad")) {
+          node.nodeValue = node.nodeValue.replace(/Baghdad/g, "Riyadh");
         }
-      });
+      }
     };
 
+    // Run immediately
+    replaceTimezone();
+
+    // Run on interval for dynamic content
     const interval = setInterval(replaceTimezone, 500);
 
-    return () => clearInterval(interval);
+    // Also observe DOM changes
+    const observer = new MutationObserver(replaceTimezone);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+
+    return () => {
+      clearInterval(interval);
+      observer.disconnect();
+    };
   }, []);
 
   if (!baseUrl) {
@@ -57,9 +80,10 @@ export default function CalendlyEmbed({ phone = "" }) {
     );
   }
 
-  // Build URL with timezone parameters
+  // Build URL with timezone and locale parameters
   const params = new URLSearchParams({
     timezone: 'Asia/Riyadh',
+    locale: 'en-US',
   });
 
   if (phone) {
@@ -69,10 +93,29 @@ export default function CalendlyEmbed({ phone = "" }) {
   const urlWithParams = `${baseUrl}?${params.toString()}`;
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", overflow: "hidden" }}>
       <style>{`
+        .calendly-inline-widget {
+          position: relative;
+          min-height: 700px;
+          overflow: hidden;
+        }
         .calendly-inline-widget iframe {
-          /* Hide timezone text - cannot change "Baghdad" to "Riyadh" as it's controlled by Calendly account settings */
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          min-height: 700px;
+        }
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+          .calendly-inline-widget {
+            min-height: 650px;
+          }
+          .calendly-inline-widget iframe {
+            min-height: 650px;
+          }
         }
       `}</style>
       <InlineWidget

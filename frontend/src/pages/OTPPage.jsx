@@ -15,6 +15,16 @@ import Logo from "../components/Logo";
 
 const RESEND_COOLDOWN = 60;
 
+/** Convert Arabic numerals to English */
+function convertArabicToEnglish(str) {
+  const arabicNumerals = '٠١٢٣٤٥٦٧٨٩';
+  const englishNumerals = '0123456789';
+  return str.split('').map(char => {
+    const index = arabicNumerals.indexOf(char);
+    return index !== -1 ? englishNumerals[index] : char;
+  }).join('');
+}
+
 export default function OTPPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -182,19 +192,22 @@ export default function OTPPage() {
               </label>
               <input
                 ref={inputRef}
-                type="text"
+                type="tel"
                 inputMode="numeric"
                 pattern="[0-9]*"
                 className="vip-input text-center text-3xl tracking-[0.6em] font-bold"
                 placeholder="· · · · · ·"
                 value={code}
-                onChange={(e) =>
-                  setCode(e.target.value.replace(/\D/g, "").slice(0, 8))
-                }
+                onChange={(e) => {
+                  // Convert Arabic numerals and keep only digits
+                  const converted = convertArabicToEnglish(e.target.value);
+                  setCode(converted.replace(/\D/g, "").slice(0, 8));
+                }}
                 maxLength={8}
                 autoFocus
                 disabled={loading}
                 autoComplete="one-time-code"
+                name="otp-code"
               />
             </div>
 
