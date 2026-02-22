@@ -128,7 +128,7 @@ export default function VerifyPage() {
             سلطان الشعيبي
           </p>
           <p className="text-xs text-right mt-0.5" style={{ color: "#A8803F" }}>
-            لودوريه
+          لودوريه
           </p>
 
           <div className="gold-divider my-5" />

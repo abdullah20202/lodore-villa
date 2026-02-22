@@ -86,7 +86,7 @@ export default function BookPage() {
           </div>
           <div className="text-right flex-1">
             <p className="text-sm font-semibold" style={{ color: "#2C2416" }}>
-              مرحباً بك في لودور فيلا
+              مرحباً بك في لودوريه فيلا
             </p>
             <p className="text-xs mt-0.5" style={{ color: "#B8A080", direction: "ltr" }}>
               {phone}
@@ -131,7 +131,7 @@ export default function BookPage() {
         </div>
 
         <p className="text-center text-xs mt-6" style={{ color: "#C8B99A" }}>
-          لودور فيلا © {new Date().getFullYear()}
+          لودوريه فيلا © {new Date().getFullYear()}
         </p>
       </div>
     </div>

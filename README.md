@@ -1,4 +1,4 @@
-# لودور فيلا — Lodore Villa VIP Booking System
+# لودوريه فيلا — Lodore Villa VIP Booking System
 
 A production-ready VIP phone verification + Calendly booking system for an exclusive Ramadan event.
 

@@ -40,7 +40,7 @@ export default function Logo({ subtitle = "", size = "md" }) {
             Lodore Villa
           </h1>
           <p className="text-xs tracking-widest mt-0.5" style={{ color: "#A8803F", letterSpacing: "0.3em" }}>
-            لودور فيلا
+            لودوريه فيلا
           </p>
         </div>
       )}

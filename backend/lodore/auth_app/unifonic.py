@@ -175,7 +175,7 @@ def send_otp(phone: str) -> str:
     sender_id = _get_sender_id()
 
     # Build SMS message
-    message_body = f"رمز التحقق الخاص بك: {otp_code}\nلودور فيلا - Lodore Villa"
+    message_body = f"رمز التحقق الخاص بك: {otp_code}\nلودوريه فيلا - Lodore Villa"
 
     # Prepare payload
     app_sid = getattr(settings, "UNIFONIC_APP_SID", "")
