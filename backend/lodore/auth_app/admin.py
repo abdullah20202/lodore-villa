@@ -1,6 +1,9 @@
 from django.contrib import admin
 from .models import VIPPhone, OTPRequest
 
+# Disable timezone selector in admin interface
+admin.site.enable_tz_override = False
+
 
 @admin.register(VIPPhone)
 class VIPPhoneAdmin(admin.ModelAdmin):
