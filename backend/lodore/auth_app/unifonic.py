@@ -174,8 +174,8 @@ def send_otp(phone: str) -> str:
     recipient = _format_recipient(phone)
     sender_id = _get_sender_id()
 
-    # Build SMS message (code first for iPhone autofill support)
-    message_body = f"{otp_code}\n\nرمز التحقق الخاص بك\nلودوريه فيلا - Lodore Villa"
+    # Build SMS message (iPhone autofill format)
+    message_body = f"{otp_code} is your verification code.\n\nLodore Villa"
 
     # Prepare payload
     app_sid = getattr(settings, "UNIFONIC_APP_SID", "")
