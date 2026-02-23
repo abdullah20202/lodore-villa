@@ -10,6 +10,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { requestOTP } from "../api/auth";
 import Logo from "../components/Logo";
+import SupportButton from "../components/SupportButton";
 
 /** Convert Arabic numerals to English */
 function convertArabicToEnglish(str) {
@@ -231,6 +232,8 @@ export default function VerifyPage() {
           للاستفسار تواصل مع المنظمين
         </p>
       </div>
+
+      <SupportButton />
     </div>
   );
 }

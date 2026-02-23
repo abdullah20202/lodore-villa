@@ -5,6 +5,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../components/Logo";
+import SupportButton from "../components/SupportButton";
 
 export default function SorryPage() {
   const navigate = useNavigate();
@@ -53,6 +54,8 @@ export default function SorryPage() {
           </button>
         </div>
       </div>
+
+      <SupportButton />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { getMe } from "../api/auth";
 import { clearTokens } from "../api/client";
 import CalendlyEmbed from "../components/CalendlyEmbed";
 import Logo from "../components/Logo";
+import SupportButton from "../components/SupportButton";
 
 export default function BookPage() {
   const navigate = useNavigate();
@@ -143,6 +144,8 @@ export default function BookPage() {
           لودوريه فيلا © {new Date().getFullYear()}
         </p>
       </div>
+
+      <SupportButton />
     </div>
   );
 }

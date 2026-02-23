@@ -12,6 +12,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { verifyOTP, requestOTP } from "../api/auth";
 import { setTokens } from "../api/client";
 import Logo from "../components/Logo";
+import SupportButton from "../components/SupportButton";
 
 const RESEND_COOLDOWN = 60;
 
@@ -283,6 +284,8 @@ export default function OTPPage() {
           ← العودة وتغيير الرقم
         </button>
       </div>
+
+      <SupportButton />
     </div>
   );
 }
