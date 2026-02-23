@@ -269,10 +269,16 @@ export default function OTPPage() {
         <button
           type="button"
           onClick={() => navigate("/verify")}
-          className="w-full mt-4 text-sm text-center transition-colors"
-          style={{ color: "#B8A080" }}
-          onMouseEnter={(e) => (e.target.style.color = "#7A6550")}
-          onMouseLeave={(e) => (e.target.style.color = "#B8A080")}
+          className="w-full mt-4 text-sm text-center transition-all duration-200"
+          style={{ color: "#E8DCC8", textShadow: "0 1px 3px rgba(0,0,0,0.3)" }}
+          onMouseEnter={(e) => {
+            e.target.style.color = "#E4B77A";
+            e.target.style.textShadow = "0 2px 6px rgba(228,183,122,0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.color = "#E8DCC8";
+            e.target.style.textShadow = "0 1px 3px rgba(0,0,0,0.3)";
+          }}
         >
           ← العودة وتغيير الرقم
         </button>

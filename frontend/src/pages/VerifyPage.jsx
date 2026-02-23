@@ -227,7 +227,7 @@ export default function VerifyPage() {
           </form>
         </div>
 
-        <p className="text-center text-xs mt-6" style={{ color: "#C8B99A" }}>
+        <p className="text-center text-xs mt-6" style={{ color: "#E8DCC8", textShadow: "0 1px 3px rgba(0,0,0,0.3)" }}>
           للاستفسار تواصل مع المنظمين
         </p>
       </div>

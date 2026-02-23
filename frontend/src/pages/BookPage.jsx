@@ -39,9 +39,9 @@ export default function BookPage() {
         <div className="flex flex-col items-center gap-4">
           <div
             className="w-10 h-10 rounded-full border-2 animate-spin"
-            style={{ borderColor: "rgba(196,149,90,0.3)", borderTopColor: "#C4955A" }}
+            style={{ borderColor: "rgba(228,183,122,0.3)", borderTopColor: "#E4B77A" }}
           />
-          <p className="text-sm" style={{ color: "#B8A080" }}>جارٍ تحميل صفحة الحجز...</p>
+          <p className="text-sm" style={{ color: "#E8DCC8", textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>جارٍ تحميل صفحة الحجز...</p>
         </div>
       </div>
     );
@@ -57,9 +57,15 @@ export default function BookPage() {
           <button
             onClick={handleLogout}
             className="text-xs mt-3 transition-colors"
-            style={{ color: "#C8B99A" }}
-            onMouseEnter={(e) => (e.target.style.color = "#7A6550")}
-            onMouseLeave={(e) => (e.target.style.color = "#C8B99A")}
+            style={{ color: "#E8DCC8", textShadow: "0 1px 3px rgba(0,0,0,0.3)" }}
+            onMouseEnter={(e) => {
+              e.target.style.color = "#E4B77A";
+              e.target.style.textShadow = "0 2px 6px rgba(228,183,122,0.4)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.color = "#E8DCC8";
+              e.target.style.textShadow = "0 1px 3px rgba(0,0,0,0.3)";
+            }}
           >
             خروج
           </button>
@@ -67,28 +73,31 @@ export default function BookPage() {
 
         {/* Welcome strip */}
         <div
-          className="flex items-center gap-3 px-5 py-4 rounded-2xl mb-6"
+          className="flex items-center gap-4 px-6 py-5 rounded-2xl mb-6"
           style={{
-            background: "#FFFFFF",
-            border: "1px solid rgba(196,149,90,0.18)",
-            boxShadow: "0 2px 16px rgba(196,149,90,0.06)",
+            background: "linear-gradient(to bottom, #FFFFFF, #FEFDFB)",
+            border: "1px solid rgba(212,167,106,0.25)",
+            boxShadow: "0 4px 24px rgba(196,149,90,0.15), 0 2px 8px rgba(0,0,0,0.1)",
           }}
         >
           {/* Checkmark badge */}
           <div
-            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-base"
+            className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
             style={{
-              background: "rgba(196,149,90,0.10)",
-              border: "1px solid rgba(196,149,90,0.25)",
+              background: "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)",
+              boxShadow: "0 4px 12px rgba(196,149,90,0.35), inset 0 1px 0 rgba(255,255,255,0.4)",
+              border: "2px solid rgba(255,255,255,0.5)",
             }}
           >
-            ✓
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 6L9 17L4 12" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
           <div className="text-right flex-1">
-            <p className="text-sm font-semibold" style={{ color: "#2C2416" }}>
+            <p className="text-base font-bold" style={{ color: "#2C2416", letterSpacing: "0.01em" }}>
               مرحباً بك في لودوريه فيلا
             </p>
-            <p className="text-xs mt-0.5" style={{ color: "#B8A080", direction: "ltr" }}>
+            <p className="text-xs mt-1" style={{ color: "#9A8060", direction: "ltr", fontWeight: "500" }}>
               {phone}
             </p>
           </div>
@@ -96,10 +105,10 @@ export default function BookPage() {
 
         {/* Section title */}
         <div className="mb-5">
-          <h2 className="text-lg font-bold mb-1" style={{ color: "#2C2416" }}>
-             احجز موعدك  
+          <h2 className="text-lg font-bold mb-1" style={{ color: "#F5EFE7", textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
+             احجز موعدك
           </h2>
-          <p className="text-sm leading-relaxed" style={{ color: "#7A6550" }}>
+          <p className="text-sm leading-relaxed" style={{ color: "#E8DCC8", textShadow: "0 1px 4px rgba(0,0,0,0.2)" }}>
             اختر الوقت المناسب لك من التقويم أدناه. يرجى ملء البيانات المطلوبة لتأكيد حجزك.
           </p>
 
@@ -110,8 +119,8 @@ export default function BookPage() {
               "أدخل اسمك وبريدك الإلكتروني",
               "ستصلك رسالة تأكيد فور إتمام الحجز",
             ].map((item, i) => (
-              <li key={i} className="flex items-center gap-2 text-xs" style={{ color: "#9A8060" }}>
-                <span style={{ color: "#C4955A", fontSize: "0.6rem" }}>◆</span>
+              <li key={i} className="flex items-center gap-2 text-xs" style={{ color: "#D8CDB8", textShadow: "0 1px 3px rgba(0,0,0,0.2)" }}>
+                <span style={{ color: "#E4B77A", fontSize: "0.6rem" }}>◆</span>
                 {item}
               </li>
             ))}
@@ -130,7 +139,7 @@ export default function BookPage() {
           <CalendlyEmbed phone={phone} />
         </div>
 
-        <p className="text-center text-xs mt-6" style={{ color: "#C8B99A" }}>
+        <p className="text-center text-xs mt-6" style={{ color: "#D8CDB8", textShadow: "0 1px 3px rgba(0,0,0,0.3)" }}>
           لودوريه فيلا © {new Date().getFullYear()}
         </p>
       </div>
