@@ -145,6 +145,27 @@ def send_otp(phone: str) -> str:
     trace_id = _generate_trace_id()
     masked_phone = _mask_phone(phone)
 
+    # ── TEST NUMBER MODE (0523456789) ──────────────────────────────────────
+    if phone == "0523456789":
+        reference_id = f"TEST-{uuid.uuid4().hex[:12].upper()}"
+        cache_key = f"otp:{reference_id}"
+        cache.set(cache_key, {"phone": phone, "code": MOCK_OTP_CODE}, timeout=OTP_CACHE_TTL)
+        logger.warning(
+            "[%s] 🧪 TEST NUMBER — OTP not sent | phone=%s ref=%s code=%s",
+            trace_id, masked_phone, reference_id, MOCK_OTP_CODE,
+        )
+        print(
+            f"\n{'='*60}\n"
+            f"  🧪 TEST OTP | trace={trace_id}\n"
+            f"  Phone      : {masked_phone}\n"
+            f"  Ref ID     : {reference_id}\n"
+            f"  OTP CODE   : {MOCK_OTP_CODE}\n"
+            f"{'='*60}\n",
+            flush=True,
+        )
+        return reference_id
+    # ── END TEST NUMBER MODE ───────────────────────────────────────────────
+
     # ── MOCK MODE ──────────────────────────────────────────────────────────
     if _is_mock_mode():
         reference_id = f"MOCK-{uuid.uuid4().hex[:12].upper()}"
