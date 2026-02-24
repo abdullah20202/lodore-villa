@@ -11,18 +11,18 @@ import { clearTokens } from "../api/client";
 import CalendlyEmbed from "../components/CalendlyEmbed";
 import Logo from "../components/Logo";
 import SupportButton from "../components/SupportButton";
-import InviteContactsForm from "../components/InviteContactsForm";
 
 export default function BookPage() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(true);
-  const [showInviteForm, setShowInviteForm] = useState(false);
+  const [alreadyBooked, setAlreadyBooked] = useState(false);
 
   useEffect(() => {
     getMe()
       .then((data) => {
         setPhone(data.phone);
+        setAlreadyBooked(data.booked || false);
         setLoading(false);
       })
       .catch(() => {
@@ -37,16 +37,8 @@ export default function BookPage() {
   };
 
   const handleEventScheduled = () => {
-    // Show invitation form after successful booking
-    setShowInviteForm(true);
-  };
-
-  const handleInviteSkip = () => {
-    setShowInviteForm(false);
-  };
-
-  const handleInviteSuccess = () => {
-    setShowInviteForm(false);
+    // Redirect to success page after booking
+    navigate("/success", { replace: true });
   };
 
   if (loading) {
@@ -119,41 +111,76 @@ export default function BookPage() {
           </div>
         </div>
 
-        {/* Section title */}
-        <div className="mb-5">
-          <h2 className="text-lg font-bold mb-1" style={{ color: "#F5EFE7", textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
-             احجز موعدك
-          </h2>
-          <p className="text-sm leading-relaxed" style={{ color: "#E8DCC8", textShadow: "0 1px 4px rgba(0,0,0,0.2)" }}>
-            اختر الوقت المناسب لك من التقويم أدناه. يرجى ملء البيانات المطلوبة لتأكيد حجزك.
-          </p>
+        {/* Content - Conditionally show based on booking status */}
+        {alreadyBooked ? (
+          /* Already Booked Message */
+          <div className="luxury-card p-8 text-center">
+            <div
+              className="w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)",
+                boxShadow: "0 4px 16px rgba(196,149,90,0.35), inset 0 1px 0 rgba(255,255,255,0.4)",
+                border: "2px solid rgba(255,255,255,0.5)",
+              }}
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 6L9 17L4 12" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
 
-          {/* Steps */}
-          <ul className="mt-3 space-y-1.5">
-            {[
-              "اختر اليوم والوقت المناسبين",
-              "أدخل اسمك وبريدك الإلكتروني",
-              "ستصلك رسالة تأكيد فور إتمام الحجز",
-            ].map((item, i) => (
-              <li key={i} className="flex items-center gap-2 text-xs" style={{ color: "#D8CDB8", textShadow: "0 1px 3px rgba(0,0,0,0.2)" }}>
-                <span style={{ color: "#E4B77A", fontSize: "0.6rem" }}>◆</span>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
+            <h2 className="text-xl font-bold mb-3" style={{ color: "#2C2416" }}>
+              لديك حجز مؤكد مسبقاً
+            </h2>
 
-        {/* Calendly embed */}
-        <div
-          className="rounded-2xl overflow-hidden"
-          style={{
-            background: "#FFFFFF",
-            border: "1px solid rgba(196,149,90,0.15)",
-            boxShadow: "0 4px 32px rgba(196,149,90,0.08)",
-          }}
-        >
-          <CalendlyEmbed phone={phone} onEventScheduled={handleEventScheduled} />
-        </div>
+            <p className="text-sm leading-relaxed mb-2" style={{ color: "#7A6550" }}>
+              تم تأكيد حجزك في لودوريه فيلا
+            </p>
+
+            <div className="gold-divider my-6" />
+
+            <p className="text-sm leading-relaxed" style={{ color: "#9A8060" }}>
+              للاستفسار أو تعديل الموعد، يرجى التواصل مع الدعم
+            </p>
+          </div>
+        ) : (
+          /* Booking Section */
+          <>
+            <div className="mb-5">
+              <h2 className="text-lg font-bold mb-1" style={{ color: "#F5EFE7", textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
+                احجز موعدك
+              </h2>
+              <p className="text-sm leading-relaxed" style={{ color: "#E8DCC8", textShadow: "0 1px 4px rgba(0,0,0,0.2)" }}>
+                اختر الوقت المناسب لك من التقويم أدناه. يرجى ملء البيانات المطلوبة لتأكيد حجزك.
+              </p>
+
+              {/* Steps */}
+              <ul className="mt-3 space-y-1.5">
+                {[
+                  "اختر اليوم والوقت المناسبين",
+                  "أدخل اسمك وبريدك الإلكتروني",
+                  "ستصلك رسالة تأكيد فور إتمام الحجز",
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-2 text-xs" style={{ color: "#D8CDB8", textShadow: "0 1px 3px rgba(0,0,0,0.2)" }}>
+                    <span style={{ color: "#E4B77A", fontSize: "0.6rem" }}>◆</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Calendly embed */}
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{
+                background: "#FFFFFF",
+                border: "1px solid rgba(196,149,90,0.15)",
+                boxShadow: "0 4px 32px rgba(196,149,90,0.08)",
+              }}
+            >
+              <CalendlyEmbed phone={phone} onEventScheduled={handleEventScheduled} />
+            </div>
+          </>
+        )}
 
         <p className="text-center text-xs mt-6" style={{ color: "#D8CDB8", textShadow: "0 1px 3px rgba(0,0,0,0.3)" }}>
           لودوريه فيلا © {new Date().getFullYear()}
@@ -161,24 +188,6 @@ export default function BookPage() {
       </div>
 
       <SupportButton />
-
-      {/* Invitation Form Modal */}
-      {showInviteForm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{
-            background: "rgba(26, 52, 73, 0.85)",
-            backdropFilter: "blur(8px)",
-          }}
-        >
-          <div className="w-full max-w-md">
-            <InviteContactsForm
-              onSkip={handleInviteSkip}
-              onSuccess={handleInviteSuccess}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

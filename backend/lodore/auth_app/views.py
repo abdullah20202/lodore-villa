@@ -244,14 +244,21 @@ class MeView(APIView):
     """
     GET /api/auth/me
     Protected: requires valid JWT.
-    Returns the authenticated phone number.
+    Returns the authenticated phone number and booking status.
     """
     authentication_classes = [PhoneJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         phone = request.user.phone
-        return Response({"ok": True, "phone": phone})
+        # Check if user has booked
+        try:
+            vip = VIPPhone.objects.get(phone=phone)
+            booked = vip.booked
+        except VIPPhone.DoesNotExist:
+            booked = False
+
+        return Response({"ok": True, "phone": phone, "booked": booked})
 
 
 class SubmitInvitationsView(APIView):

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import VerifyPage from "./pages/VerifyPage";
 import OTPPage from "./pages/OTPPage";
 import BookPage from "./pages/BookPage";
+import SuccessPage from "./pages/SuccessPage";
 import SorryPage from "./pages/SorryPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -15,12 +16,20 @@ export default function App() {
         <Route path="/otp" element={<OTPPage />} />
         <Route path="/sorry" element={<SorryPage />} />
 
-        {/* Protected route — requires valid JWT */}
+        {/* Protected routes — require valid JWT */}
         <Route
           path="/book"
           element={
             <ProtectedRoute>
               <BookPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/success"
+          element={
+            <ProtectedRoute>
+              <SuccessPage />
             </ProtectedRoute>
           }
         />
