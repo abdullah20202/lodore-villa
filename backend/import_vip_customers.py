@@ -15,9 +15,9 @@ django.setup()
 
 from lodore.auth_app.models import VIPPhone
 
-def import_vip_customers():
-    """Import VIP customers from vip_customers2.csv"""
-    csv_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'vip_customers2.csv')
+def import_vip_customers(csv_filename='vip_customers2.csv'):
+    """Import VIP customers from CSV file"""
+    csv_file = os.path.join(os.path.dirname(__file__), '..', 'data', csv_filename)
 
     if not os.path.exists(csv_file):
         print(f"❌ File not found: {csv_file}")
@@ -34,7 +34,12 @@ def import_vip_customers():
 
         for row in reader:
             phone = row['Phone'].strip()
-            name = row['Name'].strip()
+            # Get name if exists, otherwise use empty string
+            name = row.get('Name', '').strip() if row.get('Name') else ''
+
+            # Add leading 0 if not present
+            if phone and not phone.startswith('0'):
+                phone = '0' + phone
 
             if not phone:
                 continue
@@ -43,14 +48,15 @@ def import_vip_customers():
             existing = VIPPhone.objects.filter(phone=phone).first()
 
             if existing:
-                # Update the name if it's different
-                if existing.full_name != name:
+                # Update the name if provided and different
+                if name and existing.full_name != name:
                     existing.full_name = name
                     existing.save()
                     print(f"✏️  Updated: {phone} - {name}")
                     updated += 1
                 else:
-                    print(f"⏭️  Skipped (exists): {phone} - {name}")
+                    display_name = existing.full_name or phone
+                    print(f"⏭️  Skipped (exists): {phone} - {display_name}")
                     skipped += 1
             else:
                 # Create new entry
@@ -59,7 +65,8 @@ def import_vip_customers():
                     full_name=name,
                     booked=False
                 )
-                print(f"✅ Added: {phone} - {name}")
+                display_name = name if name else phone
+                print(f"✅ Added: {phone} - {display_name}")
                 added += 1
 
     print(f"\n{'='*60}")
@@ -73,5 +80,9 @@ def import_vip_customers():
 
 if __name__ == '__main__':
     print("🚀 Starting VIP Customers Import...\n")
-    import_vip_customers()
+
+    # Get CSV filename from command line argument, or use default
+    csv_filename = sys.argv[1] if len(sys.argv) > 1 else 'vip_customers2.csv'
+
+    import_vip_customers(csv_filename)
     print("✨ Import completed!")
