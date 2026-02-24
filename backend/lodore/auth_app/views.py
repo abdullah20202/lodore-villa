@@ -15,7 +15,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 
-from .models import VIPPhone, OTPRequest
+from .models import VIPPhone, OTPRequest, InvitedContact
 from .serializers import RequestOTPSerializer, VerifyOTPSerializer
 from .utils import normalize_phone
 from .unifonic import send_otp, verify_otp, UnifonicError
@@ -252,3 +252,105 @@ class MeView(APIView):
     def get(self, request):
         phone = request.user.phone
         return Response({"ok": True, "phone": phone})
+
+
+class SubmitInvitationsView(APIView):
+    """
+    POST /api/auth/invitations
+    Protected: requires valid JWT.
+    body: { "contacts": [{"name": "...", "phone": "..."}, ...] }
+
+    Allows VIP customers to invite up to 3 contacts.
+    Invitations are stored and require admin approval.
+    """
+    authentication_classes = [PhoneJWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        inviter_phone = request.user.phone
+        contacts = request.data.get("contacts", [])
+
+        # Validate input
+        if not isinstance(contacts, list):
+            return Response(
+                {"ok": False, "message": "يجب أن تكون جهات الاتصال قائمة."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if len(contacts) > 3:
+            return Response(
+                {"ok": False, "message": "يمكنك دعوة 3 أشخاص كحد أقصى."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if len(contacts) == 0:
+            return Response(
+                {"ok": False, "message": "يرجى إضافة جهة اتصال واحدة على الأقل."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Process each contact
+        created_count = 0
+        errors = []
+
+        for contact in contacts:
+            name = contact.get("name", "").strip()
+            phone = contact.get("phone", "").strip()
+
+            if not name or not phone:
+                errors.append(f"الاسم ورقم الهاتف مطلوبان لكل جهة اتصال.")
+                continue
+
+            # Normalize phone
+            try:
+                normalized_phone = normalize_phone(phone)
+            except ValueError:
+                errors.append(f"رقم الهاتف {phone} غير صالح.")
+                continue
+
+            # Check if already invited by this user
+            if InvitedContact.objects.filter(
+                inviter_phone=inviter_phone, invited_phone=normalized_phone
+            ).exists():
+                errors.append(f"تم دعوة {name} ({normalized_phone}) مسبقاً.")
+                continue
+
+            # Check if already a VIP
+            if VIPPhone.objects.filter(phone=normalized_phone).exists():
+                errors.append(f"{name} ({normalized_phone}) هو بالفعل في قائمة VIP.")
+                continue
+
+            # Create invitation
+            InvitedContact.objects.create(
+                inviter_phone=inviter_phone,
+                invited_phone=normalized_phone,
+                invited_name=name,
+            )
+            created_count += 1
+
+        if created_count == 0 and errors:
+            return Response(
+                {"ok": False, "message": " | ".join(errors)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        response_message = f"تم إرسال {created_count} دعوة بنجاح."
+        if errors:
+            response_message += f" بعض الأخطاء: {' | '.join(errors)}"
+
+        logger.info(
+            "Invitations submitted by %s: %s created, %s errors",
+            inviter_phone,
+            created_count,
+            len(errors),
+        )
+
+        return Response(
+            {
+                "ok": True,
+                "message": response_message,
+                "created": created_count,
+                "errors": errors if errors else [],
+            },
+            status=status.HTTP_201_CREATED,
+        )

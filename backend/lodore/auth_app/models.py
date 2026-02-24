@@ -26,6 +26,28 @@ class VIPPhone(models.Model):
         return f"{self.phone} ({self.full_name or 'Unknown'})"
 
 
+class InvitedContact(models.Model):
+    """
+    Stores contacts invited by VIP customers.
+    Requires admin approval before being added to VIP list.
+    """
+    inviter_phone = models.CharField(max_length=20, db_index=True)
+    invited_phone = models.CharField(max_length=20, db_index=True)
+    invited_name = models.CharField(max_length=200)
+    approved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Invited Contact"
+        verbose_name_plural = "Invited Contacts"
+        ordering = ["-created_at"]
+        unique_together = [["inviter_phone", "invited_phone"]]
+
+    def __str__(self):
+        status = "✓ Approved" if self.approved else "⏳ Pending"
+        return f"{self.invited_name} ({self.invited_phone}) - {status}"
+
+
 class OTPRequest(models.Model):
     """
     Tracks OTP send/verify cycles.

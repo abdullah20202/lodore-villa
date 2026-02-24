@@ -11,11 +11,13 @@ import { clearTokens } from "../api/client";
 import CalendlyEmbed from "../components/CalendlyEmbed";
 import Logo from "../components/Logo";
 import SupportButton from "../components/SupportButton";
+import InviteContactsForm from "../components/InviteContactsForm";
 
 export default function BookPage() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showInviteForm, setShowInviteForm] = useState(false);
 
   useEffect(() => {
     getMe()
@@ -32,6 +34,19 @@ export default function BookPage() {
   const handleLogout = () => {
     clearTokens();
     navigate("/verify", { replace: true });
+  };
+
+  const handleEventScheduled = () => {
+    // Show invitation form after successful booking
+    setShowInviteForm(true);
+  };
+
+  const handleInviteSkip = () => {
+    setShowInviteForm(false);
+  };
+
+  const handleInviteSuccess = () => {
+    setShowInviteForm(false);
   };
 
   if (loading) {
@@ -137,7 +152,7 @@ export default function BookPage() {
             boxShadow: "0 4px 32px rgba(196,149,90,0.08)",
           }}
         >
-          <CalendlyEmbed phone={phone} />
+          <CalendlyEmbed phone={phone} onEventScheduled={handleEventScheduled} />
         </div>
 
         <p className="text-center text-xs mt-6" style={{ color: "#D8CDB8", textShadow: "0 1px 3px rgba(0,0,0,0.3)" }}>
@@ -146,6 +161,24 @@ export default function BookPage() {
       </div>
 
       <SupportButton />
+
+      {/* Invitation Form Modal */}
+      {showInviteForm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{
+            background: "rgba(26, 52, 73, 0.85)",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <div className="w-full max-w-md">
+            <InviteContactsForm
+              onSkip={handleInviteSkip}
+              onSuccess={handleInviteSuccess}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

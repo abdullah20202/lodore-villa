@@ -9,8 +9,22 @@
 import { useEffect } from "react";
 import { InlineWidget } from "react-calendly";
 
-export default function CalendlyEmbed({ phone = "" }) {
+export default function CalendlyEmbed({ phone = "", onEventScheduled = null }) {
   const baseUrl = import.meta.env.VITE_CALENDLY_EVENT_URL || "";
+
+  // Listen for Calendly events
+  useEffect(() => {
+    if (!onEventScheduled) return;
+
+    const handleMessage = (e) => {
+      if (e.data.event && e.data.event === 'calendly.event_scheduled') {
+        onEventScheduled();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [onEventScheduled]);
 
   // Force browser to use 12-hour format locale
   useEffect(() => {

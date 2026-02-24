@@ -47,3 +47,13 @@ export const getMe = async () => {
   const { data } = await apiClient.get("/api/auth/me");
   return data;
 };
+
+/**
+ * Submit invitations for contacts (max 3).
+ * @param {Array<{name: string, phone: string}>} contacts - Array of contacts to invite
+ * @returns {Promise<{ok: boolean, message: string, created: number, errors: Array}>}
+ */
+export const submitInvitations = async (contacts) => {
+  const { data } = await apiClient.post("/api/auth/invitations", { contacts });
+  return data;
+};
