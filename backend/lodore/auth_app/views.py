@@ -16,12 +16,21 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 
 from .models import VIPPhone, OTPRequest, InvitedContact
-from .serializers import RequestOTPSerializer, VerifyOTPSerializer
+from .serializers import (
+    RequestOTPSerializer,
+    VerifyOTPSerializer,
+    InvitedContactSerializer,
+    UpdateInvitedContactStatusSerializer,
+)
 from .utils import normalize_phone
 from .unifonic import send_otp, verify_otp, UnifonicError
 from .jwt_backend import get_tokens_for_phone
 from .authentication import PhoneJWTAuthentication
 from .throttles import RequestOTPThrottle, VerifyOTPThrottle
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from django.core.paginator import Paginator
+from django.db.models import Q
 
 logger = logging.getLogger("lodore")
 
@@ -360,4 +369,184 @@ class SubmitInvitationsView(APIView):
                 "errors": errors if errors else [],
             },
             status=status.HTTP_201_CREATED,
+        )
+
+
+class StaffLoginView(APIView):
+    """
+    POST /api/management/login
+    body: { "username": "...", "password": "..." }
+
+    Authenticates staff users and returns JWT tokens.
+    Only staff/superuser accounts can login.
+    """
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get("username", "")
+        password = request.data.get("password", "")
+
+        if not username or not password:
+            return Response(
+                {"ok": False, "message": "Username and password are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = authenticate(username=username, password=password)
+
+        if not user:
+            return Response(
+                {"ok": False, "message": "Invalid credentials."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if not (user.is_staff or user.is_superuser):
+            return Response(
+                {"ok": False, "message": "Access denied. Staff only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+        access = str(refresh.access_token)
+
+        logger.info("Staff login successful: %s", username)
+
+        return Response(
+            {
+                "ok": True,
+                "access": access,
+                "refresh": str(refresh),
+                "username": user.username,
+                "is_superuser": user.is_superuser,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class NominationsListView(APIView):
+    """
+    GET /api/management/nominations
+    Query params: search, status, page, page_size
+
+    Returns paginated list of invited contacts with search/filter.
+    Staff only.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Check if user is staff
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {"ok": False, "message": "Access denied. Staff only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Get query parameters
+        search = request.GET.get("search", "").strip()
+        status_filter = request.GET.get("status", "").strip()
+        page = int(request.GET.get("page", 1))
+        page_size = int(request.GET.get("page_size", 20))
+
+        # Build query
+        queryset = InvitedContact.objects.all()
+
+        # Search by name or phone
+        if search:
+            queryset = queryset.filter(
+                Q(invited_name__icontains=search) |
+                Q(invited_phone__icontains=search) |
+                Q(inviter_phone__icontains=search)
+            )
+
+        # Filter by status
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+
+        # Order by created_at desc
+        queryset = queryset.order_by("-created_at")
+
+        # Paginate
+        paginator = Paginator(queryset, page_size)
+        page_obj = paginator.get_page(page)
+
+        # Serialize manually
+        results = [
+            {
+                "id": obj.id,
+                "invited_name": obj.invited_name,
+                "invited_phone": obj.invited_phone,
+                "inviter_phone": obj.inviter_phone,
+                "status": obj.status,
+                "approved": obj.approved,
+                "created_at": obj.created_at.isoformat(),
+            }
+            for obj in page_obj.object_list
+        ]
+
+        return Response(
+            {
+                "ok": True,
+                "results": results,
+                "count": paginator.count,
+                "page": page,
+                "total_pages": paginator.num_pages,
+                "has_next": page_obj.has_next(),
+                "has_previous": page_obj.has_previous(),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class UpdateNominationStatusView(APIView):
+    """
+    PATCH /api/management/nominations/<id>
+    body: { "status": "contacted" }
+
+    Updates the status of a nomination.
+    Staff only.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, nomination_id):
+        # Check if user is staff
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {"ok": False, "message": "Access denied. Staff only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Validate input
+        serializer = UpdateInvitedContactStatusSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {"ok": False, "message": "Invalid status value."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Get nomination
+        try:
+            nomination = InvitedContact.objects.get(id=nomination_id)
+        except InvitedContact.DoesNotExist:
+            return Response(
+                {"ok": False, "message": "Nomination not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Update status
+        new_status = serializer.validated_data["status"]
+        nomination.status = new_status
+        nomination.save(update_fields=["status"])
+
+        logger.info(
+            "Nomination status updated by %s: id=%s status=%s",
+            request.user.username,
+            nomination_id,
+            new_status,
+        )
+
+        return Response(
+            {"ok": True, "message": "Status updated successfully."},
+            status=status.HTTP_200_OK,
         )

@@ -31,10 +31,28 @@ class InvitedContact(models.Model):
     Stores contacts invited by VIP customers.
     Requires admin approval before being added to VIP list.
     """
+    STATUS_PENDING = "pending"
+    STATUS_CONTACTED = "contacted"
+    STATUS_INVITED = "invited"
+    STATUS_CONFIRMED = "confirmed"
+
+    STATUS_CHOICES = [
+        (STATUS_PENDING, "Pending"),
+        (STATUS_CONTACTED, "Contacted"),
+        (STATUS_INVITED, "Invited"),
+        (STATUS_CONFIRMED, "Confirmed"),
+    ]
+
     inviter_phone = models.CharField(max_length=20, db_index=True)
     invited_phone = models.CharField(max_length=20, db_index=True)
     invited_name = models.CharField(max_length=200)
     approved = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_PENDING,
+        db_index=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -44,8 +62,8 @@ class InvitedContact(models.Model):
         unique_together = [["inviter_phone", "invited_phone"]]
 
     def __str__(self):
-        status = "✓ Approved" if self.approved else "⏳ Pending"
-        return f"{self.invited_name} ({self.invited_phone}) - {status}"
+        approved_text = "✓ Approved" if self.approved else "⏳ Pending"
+        return f"{self.invited_name} ({self.invited_phone}) - {self.get_status_display()} - {approved_text}"
 
 
 class OTPRequest(models.Model):

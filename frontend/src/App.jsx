@@ -5,6 +5,8 @@ import OTPPage from "./pages/OTPPage";
 import BookPage from "./pages/BookPage";
 import SuccessPage from "./pages/SuccessPage";
 import SorryPage from "./pages/SorryPage";
+import StaffLoginPage from "./pages/StaffLoginPage";
+import ManagementDashboardPage from "./pages/ManagementDashboardPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -33,6 +35,12 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Management routes */}
+        <Route path="/management/login" element={<StaffLoginPage />} />
+        <Route path="/management/dashboard" element={<ManagementDashboardPage />} />
+        {/* Legacy route redirect */}
+        <Route path="/management/nominations" element={<ManagementDashboardPage />} />
 
         {/* Redirect root → /verify */}
         <Route path="/" element={<Navigate to="/verify" replace />} />

@@ -41,3 +41,21 @@ class VerifyOTPSerializer(serializers.Serializer):
 
 class TokenRefreshSerializer(serializers.Serializer):
     refresh = serializers.CharField()
+
+
+class InvitedContactSerializer(serializers.Serializer):
+    """Serializer for listing invited contacts"""
+    id = serializers.IntegerField(read_only=True)
+    invited_name = serializers.CharField(read_only=True)
+    invited_phone = serializers.CharField(read_only=True)
+    inviter_phone = serializers.CharField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    approved = serializers.BooleanField(read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+
+
+class UpdateInvitedContactStatusSerializer(serializers.Serializer):
+    """Serializer for updating contact status"""
+    status = serializers.ChoiceField(choices=[
+        "pending", "contacted", "invited", "confirmed"
+    ])

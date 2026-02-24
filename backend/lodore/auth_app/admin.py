@@ -23,8 +23,8 @@ class OTPRequestAdmin(admin.ModelAdmin):
 
 @admin.register(InvitedContact)
 class InvitedContactAdmin(admin.ModelAdmin):
-    list_display = ("invited_name", "invited_phone", "inviter_phone", "approved", "created_at")
-    list_filter = ("approved", "created_at")
+    list_display = ("invited_name", "invited_phone", "inviter_phone", "status", "approved", "created_at")
+    list_filter = ("status", "approved", "created_at")
     search_fields = ("invited_name", "invited_phone", "inviter_phone")
     readonly_fields = ("created_at",)
     actions = ["approve_invitations", "add_to_vip_list"]
