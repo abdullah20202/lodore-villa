@@ -68,6 +68,28 @@ def _extract_phone_from_payload(payload: dict) -> str | None:
     return None
 
 
+def _extract_invitee_info(payload: dict) -> dict:
+    """
+    Extract invitee information (name, email, phone) from Calendly webhook payload.
+
+    Returns dict with keys: name, email, phone
+    """
+    invitee = payload.get("payload", {})
+
+    result = {
+        "name": invitee.get("name", ""),
+        "email": invitee.get("email", ""),
+        "phone": None,
+    }
+
+    # Extract phone using existing function
+    phone = _extract_phone_from_payload(payload)
+    if phone:
+        result["phone"] = phone
+
+    return result
+
+
 @method_decorator(csrf_exempt, name="dispatch")
 class CalendlyWebhookView(APIView):
     """
@@ -109,6 +131,12 @@ class CalendlyWebhookView(APIView):
             logger.info("Accepting Calendly webhook with signature header (verification skipped)")
             return True
 
+        # Method 4: Check for Calendly user agent
+        user_agent = request.META.get("HTTP_USER_AGENT", "")
+        if "Calendly" in user_agent or "calendly" in user_agent.lower():
+            logger.info("Accepting webhook from Calendly user agent: %s", user_agent)
+            return True
+
         # If no secret configured at all, allow (dev mode)
         if not configured_secret and not signing_key:
             logger.warning("No webhook secret configured — accepting all webhook calls!")
@@ -134,8 +162,11 @@ class CalendlyWebhookView(APIView):
         event_type = payload.get("event", "unknown")
         logger.info("Calendly webhook received: event=%s", event_type)
 
-        # --- Extract phone ---
-        phone = _extract_phone_from_payload(payload)
+        # --- Extract invitee info (name, email, phone) ---
+        invitee_info = _extract_invitee_info(payload)
+        phone = invitee_info.get("phone")
+        name = invitee_info.get("name", "")
+        email = invitee_info.get("email", "")
 
         # --- Log to DB ---
         log = BookingLog.objects.create(
@@ -144,7 +175,10 @@ class CalendlyWebhookView(APIView):
             payload=payload,
             phone=phone or "",
         )
-        logger.info("BookingLog created: id=%s event=%s phone=%s", log.pk, event_type, phone)
+        logger.info(
+            "BookingLog created: id=%s event=%s phone=%s name=%s email=%s",
+            log.pk, event_type, phone, name, email
+        )
 
         # --- Handle invitee.created ---
         if event_type == "invitee.created" and phone:
@@ -157,10 +191,13 @@ class CalendlyWebhookView(APIView):
                         {"received": False, "error": "User already has an active booking"},
                         status=status.HTTP_409_CONFLICT
                     )
+                # Update booking status and store name/email from Calendly
                 vip.booked = True
                 vip.bookings_count += 1
-                vip.save(update_fields=["booked", "bookings_count"])
-                logger.info("VIP marked as booked: phone=%s", phone)
+                if name and not vip.full_name:
+                    vip.full_name = name
+                vip.save(update_fields=["booked", "bookings_count", "full_name"])
+                logger.info("VIP marked as booked: phone=%s name=%s email=%s", phone, name, email)
             except VIPPhone.DoesNotExist:
                 logger.info("Calendly booking for non-VIP phone=%s (not updating)", phone)
 
