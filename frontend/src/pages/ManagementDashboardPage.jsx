@@ -43,6 +43,7 @@ export default function ManagementDashboardPage() {
   const [username, setUsername] = useState("");
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
+  const [selectAllPages, setSelectAllPages] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -106,15 +107,19 @@ export default function ManagementDashboardPage() {
 
   const handleExportExcel = async () => {
     try {
-      // Prepare IDs to export
-      let idsParam = '';
-      if (selectedRows.size > 0) {
+      // Prepare export parameters
+      let exportParam = '';
+      if (selectAllPages) {
+        // Export all pages with current filters
+        exportParam = '&export_all=true';
+      } else if (selectedRows.size > 0) {
+        // Export only selected rows
         const ids = Array.from(selectedRows).join(',');
-        idsParam = `&ids=${ids}`;
+        exportParam = `&ids=${ids}`;
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/auth/management/nominations/export?search=${search}&status=${statusFilter}${idsParam}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/auth/management/nominations/export?search=${search}&status=${statusFilter}${exportParam}`,
         {
           method: 'GET',
           headers: {
@@ -142,6 +147,7 @@ export default function ManagementDashboardPage() {
       // Clear selection after export
       setSelectedRows(new Set());
       setSelectAll(false);
+      setSelectAllPages(false);
     } catch (err) {
       console.error('Export error:', err);
       alert('فشل تصدير الملف');
@@ -157,6 +163,17 @@ export default function ManagementDashboardPage() {
     } else {
       setSelectedRows(new Set());
     }
+    setSelectAllPages(false); // Deselect all pages when toggling current page
+  };
+
+  const handleSelectAllPages = (e) => {
+    const checked = e.target.checked;
+    setSelectAllPages(checked);
+    if (checked) {
+      // When selecting all pages, clear individual row selections
+      setSelectedRows(new Set());
+      setSelectAll(false);
+    }
   };
 
   const handleSelectRow = (id) => {
@@ -168,6 +185,7 @@ export default function ManagementDashboardPage() {
     }
     setSelectedRows(newSelected);
     setSelectAll(newSelected.size === nominations.length);
+    setSelectAllPages(false); // Deselect all pages when selecting individual rows
   };
 
   const formatDate = (dateString) => {
@@ -288,30 +306,50 @@ export default function ManagementDashboardPage() {
           </div>
 
           {/* Count and Export */}
-          <div className="mt-4 flex items-center justify-between">
-            <div className="text-sm" style={{ color: "#7A6550" }}>
-              الإجمالي: <strong>{count}</strong> ترشيح
-              {selectedRows.size > 0 && (
-                <span className="mr-3" style={{ color: "#C4955A" }}>
-                  • المحدد: <strong>{selectedRows.size}</strong>
-                </span>
-              )}
+          <div className="mt-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="text-sm" style={{ color: "#7A6550" }}>
+                الإجمالي: <strong>{count}</strong> ترشيح
+                {selectAllPages && (
+                  <span className="mr-3" style={{ color: "#C4955A" }}>
+                    • المحدد: <strong>الكل ({count})</strong>
+                  </span>
+                )}
+                {!selectAllPages && selectedRows.size > 0 && (
+                  <span className="mr-3" style={{ color: "#C4955A" }}>
+                    • المحدد: <strong>{selectedRows.size}</strong>
+                  </span>
+                )}
+              </div>
+
+              {/* Select All Pages Checkbox */}
+              <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: "#7A6550" }}>
+                <input
+                  type="checkbox"
+                  checked={selectAllPages}
+                  onChange={handleSelectAllPages}
+                  className="w-4 h-4 cursor-pointer"
+                  style={{ accentColor: "#C4955A" }}
+                />
+                <span>تحديد الكل ({count})</span>
+              </label>
             </div>
+
             <button
               onClick={handleExportExcel}
-              disabled={selectedRows.size === 0 && count > 0}
+              disabled={!selectAllPages && selectedRows.size === 0 && count > 0}
               className="text-sm px-4 py-2 rounded-lg transition-all flex items-center gap-2"
               style={{
-                background: selectedRows.size === 0 && count > 0
+                background: (!selectAllPages && selectedRows.size === 0 && count > 0)
                   ? "rgba(196,149,90,0.3)"
                   : "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)",
                 color: "#FFFFFF",
                 border: "none",
                 boxShadow: "0 2px 8px rgba(196,149,90,0.3)",
-                cursor: selectedRows.size === 0 && count > 0 ? "not-allowed" : "pointer",
+                cursor: (!selectAllPages && selectedRows.size === 0 && count > 0) ? "not-allowed" : "pointer",
               }}
               onMouseEnter={(e) => {
-                if (selectedRows.size > 0 || count === 0) {
+                if (selectAllPages || selectedRows.size > 0 || count === 0) {
                   e.target.style.transform = "translateY(-1px)";
                   e.target.style.boxShadow = "0 4px 12px rgba(196,149,90,0.4)";
                 }
@@ -321,7 +359,9 @@ export default function ManagementDashboardPage() {
                 e.target.style.boxShadow = "0 2px 8px rgba(196,149,90,0.3)";
               }}
             >
-              📥 تصدير المحدد ({selectedRows.size > 0 ? selectedRows.size : 'اختر صفوف'})
+              📥 تصدير المحدد (
+                {selectAllPages ? `الكل ${count}` : selectedRows.size > 0 ? selectedRows.size : 'اختر صفوف'}
+              )
             </button>
           </div>
         </div>

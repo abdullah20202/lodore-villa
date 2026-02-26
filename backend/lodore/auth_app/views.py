@@ -593,12 +593,13 @@ class ExportNominationsView(APIView):
         search = request.GET.get("search", "").strip()
         status_filter = request.GET.get("status", "").strip()
         ids_param = request.GET.get("ids", "").strip()
+        export_all = request.GET.get("export_all", "").strip().lower() == "true"
 
         # Build query
         queryset = InvitedContact.objects.all()
 
         # Filter by specific IDs if provided
-        if ids_param:
+        if ids_param and not export_all:
             try:
                 ids = [int(id.strip()) for id in ids_param.split(',') if id.strip()]
                 queryset = queryset.filter(id__in=ids)
@@ -608,7 +609,7 @@ class ExportNominationsView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         else:
-            # Only apply search and status filters if no specific IDs requested
+            # Apply search and status filters (for export_all or when no specific IDs)
             # Search by name or phone
             if search:
                 queryset = queryset.filter(
