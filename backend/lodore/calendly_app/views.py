@@ -170,7 +170,8 @@ class CalendlyWebhookView(APIView):
 
         # --- Extract scheduled time and event URI ---
         invitee_data = payload.get("payload", {})
-        scheduled_at_str = invitee_data.get("start_time", "")
+        scheduled_event = invitee_data.get("scheduled_event", {})
+        scheduled_at_str = scheduled_event.get("start_time", "")
         event_uri = invitee_data.get("uri", "")
 
         # Parse scheduled time
