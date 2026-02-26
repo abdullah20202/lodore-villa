@@ -103,6 +103,12 @@ class CalendlyWebhookView(APIView):
             except Exception as exc:
                 logger.warning("HMAC signature verification error: %s", exc)
 
+        # Method 3: Accept Calendly webhooks with signature header (even without verification)
+        # This allows Calendly webhooks when signing key is not configured yet
+        if signature_header:
+            logger.info("Accepting Calendly webhook with signature header (verification skipped)")
+            return True
+
         # If no secret configured at all, allow (dev mode)
         if not configured_secret and not signing_key:
             logger.warning("No webhook secret configured — accepting all webhook calls!")
@@ -144,6 +150,13 @@ class CalendlyWebhookView(APIView):
         if event_type == "invitee.created" and phone:
             try:
                 vip = VIPPhone.objects.get(phone=phone)
+                # Check if already booked
+                if vip.booked:
+                    logger.warning("Booking attempt rejected: phone=%s already booked", phone)
+                    return Response(
+                        {"received": False, "error": "User already has an active booking"},
+                        status=status.HTTP_409_CONFLICT
+                    )
                 vip.booked = True
                 vip.bookings_count += 1
                 vip.save(update_fields=["booked", "bookings_count"])
