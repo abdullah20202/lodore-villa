@@ -558,3 +558,129 @@ class UpdateNominationStatusView(APIView):
             {"ok": True, "message": "Status updated successfully."},
             status=status.HTTP_200_OK,
         )
+
+
+class ExportNominationsView(APIView):
+    """
+    GET /api/management/nominations/export
+    Query params: search, status
+
+    Export nominations to Excel file.
+    Staff only.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Check if user is staff
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {"ok": False, "message": "Access denied. Staff only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            from openpyxl import Workbook
+            from openpyxl.styles import Font, Alignment, PatternFill
+            from django.http import HttpResponse
+            import io
+        except ImportError:
+            return Response(
+                {"ok": False, "message": "Excel export not available."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        # Get query parameters
+        search = request.GET.get("search", "").strip()
+        status_filter = request.GET.get("status", "").strip()
+
+        # Build query
+        queryset = InvitedContact.objects.all()
+
+        # Search by name or phone
+        if search:
+            queryset = queryset.filter(
+                Q(invited_name__icontains=search) |
+                Q(invited_phone__icontains=search) |
+                Q(inviter_phone__icontains=search)
+            )
+
+        # Filter by status
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+
+        # Order by created_at desc
+        queryset = queryset.order_by("-created_at")
+
+        # Create workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "ترشيحات الضيوف"
+
+        # Define headers (Arabic RTL)
+        headers = ["اسم الضيف", "رقم الضيف", "اسم المرشِّح", "رقم المرشِّح", "الحالة", "موافقة", "تاريخ الإنشاء"]
+
+        # Style for header
+        header_fill = PatternFill(start_color="C4955A", end_color="C4955A", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF", size=12)
+        header_alignment = Alignment(horizontal="center", vertical="center")
+
+        # Add headers
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num, value=header)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+
+        # Add data
+        row_num = 2
+        for nomination in queryset:
+            # Get inviter name
+            inviter_name = ""
+            try:
+                inviter_vip = VIPPhone.objects.get(phone=nomination.inviter_phone)
+                inviter_name = inviter_vip.full_name
+            except VIPPhone.DoesNotExist:
+                inviter_name = ""
+
+            # Status labels in Arabic
+            status_labels = {
+                "pending": "قيد الانتظار",
+                "contacted": "تم التواصل",
+                "invited": "تم الدعوة",
+                "confirmed": "مؤكد",
+            }
+
+            ws.cell(row=row_num, column=1, value=nomination.invited_name)
+            ws.cell(row=row_num, column=2, value=nomination.invited_phone)
+            ws.cell(row=row_num, column=3, value=inviter_name)
+            ws.cell(row=row_num, column=4, value=nomination.inviter_phone)
+            ws.cell(row=row_num, column=5, value=status_labels.get(nomination.status, nomination.status))
+            ws.cell(row=row_num, column=6, value="نعم" if nomination.approved else "لا")
+            ws.cell(row=row_num, column=7, value=nomination.created_at.strftime("%Y-%m-%d %H:%M"))
+
+            row_num += 1
+
+        # Adjust column widths
+        ws.column_dimensions['A'].width = 20
+        ws.column_dimensions['B'].width = 15
+        ws.column_dimensions['C'].width = 20
+        ws.column_dimensions['D'].width = 15
+        ws.column_dimensions['E'].width = 15
+        ws.column_dimensions['F'].width = 10
+        ws.column_dimensions['G'].width = 18
+
+        # Save to BytesIO
+        excel_file = io.BytesIO()
+        wb.save(excel_file)
+        excel_file.seek(0)
+
+        # Create response
+        response = HttpResponse(
+            excel_file.read(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response["Content-Disposition"] = f'attachment; filename="nominations_{timezone.now().strftime("%Y-%m-%d")}.xlsx"'
+
+        logger.info("Nominations exported to Excel by %s", request.user.username)
+
+        return response

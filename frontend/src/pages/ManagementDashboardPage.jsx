@@ -24,13 +24,6 @@ const STATUS_OPTIONS = [
   { value: "confirmed", label: "مؤكد" },
 ];
 
-const STATUS_LABELS = {
-  pending: "قيد الانتظار",
-  contacted: "تم التواصل",
-  invited: "تم الدعوة",
-  confirmed: "مؤكد",
-};
-
 const STATUS_COLORS = {
   pending: { bg: "#FFF8E1", border: "#FFB74D", text: "#E65100" },
   contacted: { bg: "#E3F2FD", border: "#64B5F6", text: "#1565C0" },
@@ -106,7 +99,34 @@ export default function ManagementDashboardPage() {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    alert("Copied!");
+    alert("تم النسخ!");
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/management/nominations/export?search=${search}&status=${statusFilter}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `nominations_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      alert('فشل تصدير الملف');
+    }
   };
 
   const formatDate = (dateString) => {
@@ -226,9 +246,31 @@ export default function ManagementDashboardPage() {
             </div>
           </div>
 
-          {/* Count */}
-          <div className="mt-4 text-sm" style={{ color: "#7A6550" }}>
-            الإجمالي: <strong>{count}</strong> ترشيح
+          {/* Count and Export */}
+          <div className="mt-4 flex items-center justify-between">
+            <div className="text-sm" style={{ color: "#7A6550" }}>
+              الإجمالي: <strong>{count}</strong> ترشيح
+            </div>
+            <button
+              onClick={handleExportExcel}
+              className="text-sm px-4 py-2 rounded-lg transition-all flex items-center gap-2"
+              style={{
+                background: "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)",
+                color: "#FFFFFF",
+                border: "none",
+                boxShadow: "0 2px 8px rgba(196,149,90,0.3)",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "translateY(-1px)";
+                e.target.style.boxShadow = "0 4px 12px rgba(196,149,90,0.4)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 2px 8px rgba(196,149,90,0.3)";
+              }}
+            >
+              📥 تصدير إلى Excel
+            </button>
           </div>
         </div>
 
@@ -240,7 +282,7 @@ export default function ManagementDashboardPage() {
               style={{ borderColor: "rgba(228,183,122,0.3)", borderTopColor: "#E4B77A" }}
             />
             <p className="mt-4 text-sm" style={{ color: "#E8DCC8" }}>
-              Loading...
+              جاري التحميل...
             </p>
           </div>
         ) : nominations.length === 0 ? (
@@ -248,7 +290,7 @@ export default function ManagementDashboardPage() {
             className="text-center py-12 rounded-xl"
             style={{ background: "rgba(255,255,255,0.95)" }}
           >
-            <p style={{ color: "#7A6550" }}>No nominations found</p>
+            <p style={{ color: "#7A6550" }}>لا توجد ترشيحات</p>
           </div>
         ) : (
           <>
@@ -256,23 +298,23 @@ export default function ManagementDashboardPage() {
               <table className="w-full">
                 <thead>
                   <tr style={{ borderBottom: "2px solid rgba(196,149,90,0.2)" }}>
-                    <th className="px-4 py-3 text-left text-xs font-semibold" style={{ color: "#7A6550" }}>
-                      Guest Name
+                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                      اسم الضيف
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold" style={{ color: "#7A6550" }}>
-                      Guest Phone
+                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                      رقم الضيف
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold" style={{ color: "#7A6550" }}>
-                      Nominated By
+                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                      المرشِّح
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold" style={{ color: "#7A6550" }}>
-                      Status
+                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                      الحالة
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold" style={{ color: "#7A6550" }}>
-                      Created
+                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                      تاريخ الإنشاء
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold" style={{ color: "#7A6550" }}>
-                      Actions
+                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                      إجراءات
                     </th>
                   </tr>
                 </thead>
@@ -294,7 +336,7 @@ export default function ManagementDashboardPage() {
                             onClick={() => copyToClipboard(nom.invited_phone)}
                             className="text-xs px-2 py-1 rounded"
                             style={{ background: "rgba(196,149,90,0.1)", color: "#A8803F" }}
-                            title="Copy"
+                            title="نسخ"
                           >
                             📋
                           </button>
@@ -331,10 +373,10 @@ export default function ManagementDashboardPage() {
                             color: STATUS_COLORS[nom.status]?.text || "#000",
                           }}
                         >
-                          <option value="pending">Pending</option>
-                          <option value="contacted">Contacted</option>
-                          <option value="invited">Invited</option>
-                          <option value="confirmed">Confirmed</option>
+                          <option value="pending">قيد الانتظار</option>
+                          <option value="contacted">تم التواصل</option>
+                          <option value="invited">تم الدعوة</option>
+                          <option value="confirmed">مؤكد</option>
                         </select>
                       </td>
                       <td className="px-4 py-3 text-xs" style={{ color: "#9A8060" }}>
@@ -346,7 +388,7 @@ export default function ManagementDashboardPage() {
                             className="text-xs px-2 py-1 rounded"
                             style={{ background: "rgba(76,175,80,0.1)", color: "#4CAF50" }}
                           >
-                            ✓ Approved
+                            ✓ تمت الموافقة
                           </span>
                         )}
                       </td>
@@ -369,11 +411,11 @@ export default function ManagementDashboardPage() {
                     border: "1px solid rgba(196,149,90,0.3)",
                   }}
                 >
-                  Previous
+                  السابق
                 </button>
 
                 <span className="text-sm px-4" style={{ color: "#E8DCC8" }}>
-                  Page {page} of {totalPages}
+                  صفحة {page} من {totalPages}
                 </span>
 
                 <button
@@ -386,7 +428,7 @@ export default function ManagementDashboardPage() {
                     border: "1px solid rgba(196,149,90,0.3)",
                   }}
                 >
-                  Next
+                  التالي
                 </button>
               </div>
             )}

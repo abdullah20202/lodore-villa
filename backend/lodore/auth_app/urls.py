@@ -8,6 +8,7 @@ from .views import (
     StaffLoginView,
     NominationsListView,
     UpdateNominationStatusView,
+    ExportNominationsView,
 )
 
 urlpatterns = [
@@ -21,5 +22,6 @@ urlpatterns = [
     # Management endpoints
     path("management/login", StaffLoginView.as_view(), name="staff-login"),
     path("management/nominations", NominationsListView.as_view(), name="nominations-list"),
+    path("management/nominations/export", ExportNominationsView.as_view(), name="export-nominations"),
     path("management/nominations/<int:nomination_id>", UpdateNominationStatusView.as_view(), name="update-nomination-status"),
 ]
