@@ -703,7 +703,7 @@ class ExportNominationsView(APIView):
 class ReservationsListView(APIView):
     """
     GET /api/management/reservations
-    Query params: search, status, page, page_size
+    Query params: search, status, date_from, date_to, page, page_size
 
     Returns paginated list of reservations/bookings.
     Staff only.
@@ -719,10 +719,14 @@ class ReservationsListView(APIView):
             )
 
         from lodore.calendly_app.models import BookingLog
+        from datetime import datetime, timedelta
+        from django.utils import timezone
 
         # Get query parameters
         search = request.GET.get("search", "").strip()
         status_filter = request.GET.get("status", "").strip()
+        date_from = request.GET.get("date_from", "").strip()
+        date_to = request.GET.get("date_to", "").strip()
         page = int(request.GET.get("page", 1))
         page_size = int(request.GET.get("page_size", 20))
 
@@ -740,6 +744,27 @@ class ReservationsListView(APIView):
         # Filter by status
         if status_filter:
             queryset = queryset.filter(status=status_filter)
+
+        # Filter by date range
+        if date_from:
+            try:
+                from_date = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
+                if timezone.is_naive(from_date):
+                    from_date = timezone.make_aware(from_date)
+                queryset = queryset.filter(scheduled_at__gte=from_date)
+            except (ValueError, TypeError):
+                pass
+
+        if date_to:
+            try:
+                to_date = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
+                if timezone.is_naive(to_date):
+                    to_date = timezone.make_aware(to_date)
+                # Add one day to include the entire day
+                to_date = to_date + timedelta(days=1)
+                queryset = queryset.filter(scheduled_at__lt=to_date)
+            except (ValueError, TypeError):
+                pass
 
         # Order by scheduled_at desc
         queryset = queryset.order_by("-scheduled_at", "-received_at")

@@ -27,6 +27,9 @@ export default function ReservationsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [quickFilter, setQuickFilter] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [count, setCount] = useState(0);
@@ -41,7 +44,7 @@ export default function ReservationsPage() {
     }
     setUsername(managementUsername);
     loadReservations();
-  }, [search, statusFilter, page, navigate]);
+  }, [search, statusFilter, dateFrom, dateTo, page, navigate]);
 
   const loadReservations = async () => {
     setLoading(true);
@@ -49,6 +52,8 @@ export default function ReservationsPage() {
       const data = await getReservations({
         search,
         status: statusFilter,
+        date_from: dateFrom,
+        date_to: dateTo,
         page,
         page_size: 20,
       });
@@ -88,6 +93,50 @@ export default function ReservationsPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleQuickFilter = (filter) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let from = "";
+    let to = "";
+
+    switch (filter) {
+      case "today":
+        from = today.toISOString().split('T')[0];
+        to = today.toISOString().split('T')[0];
+        break;
+      case "tomorrow":
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        from = tomorrow.toISOString().split('T')[0];
+        to = tomorrow.toISOString().split('T')[0];
+        break;
+      case "week":
+        from = today.toISOString().split('T')[0];
+        const weekEnd = new Date(today);
+        weekEnd.setDate(weekEnd.getDate() + 7);
+        to = weekEnd.toISOString().split('T')[0];
+        break;
+      case "month":
+        from = today.toISOString().split('T')[0];
+        const monthEnd = new Date(today);
+        monthEnd.setMonth(monthEnd.getMonth() + 1);
+        to = monthEnd.toISOString().split('T')[0];
+        break;
+      case "all":
+        from = "";
+        to = "";
+        break;
+      default:
+        break;
+    }
+
+    setDateFrom(from);
+    setDateTo(to);
+    setQuickFilter(filter);
+    setPage(1);
   };
 
   return (
@@ -141,6 +190,104 @@ export default function ReservationsPage() {
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          {/* Date Quick Filters */}
+          <div className="mt-4">
+            <label className="block text-xs mb-2 font-medium" style={{ color: "#7A6550" }}>
+              تصفية حسب التاريخ
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => handleQuickFilter("today")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${quickFilter === "today" ? "shadow-md" : ""}`}
+                style={{
+                  background: quickFilter === "today" ? "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)" : "rgba(196,149,90,0.1)",
+                  border: "1px solid rgba(196,149,90,0.3)",
+                  color: quickFilter === "today" ? "#FFF" : "#A8803F",
+                }}
+              >
+                اليوم
+              </button>
+              <button
+                onClick={() => handleQuickFilter("tomorrow")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${quickFilter === "tomorrow" ? "shadow-md" : ""}`}
+                style={{
+                  background: quickFilter === "tomorrow" ? "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)" : "rgba(196,149,90,0.1)",
+                  border: "1px solid rgba(196,149,90,0.3)",
+                  color: quickFilter === "tomorrow" ? "#FFF" : "#A8803F",
+                }}
+              >
+                غداً
+              </button>
+              <button
+                onClick={() => handleQuickFilter("week")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${quickFilter === "week" ? "shadow-md" : ""}`}
+                style={{
+                  background: quickFilter === "week" ? "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)" : "rgba(196,149,90,0.1)",
+                  border: "1px solid rgba(196,149,90,0.3)",
+                  color: quickFilter === "week" ? "#FFF" : "#A8803F",
+                }}
+              >
+                هذا الأسبوع
+              </button>
+              <button
+                onClick={() => handleQuickFilter("month")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${quickFilter === "month" ? "shadow-md" : ""}`}
+                style={{
+                  background: quickFilter === "month" ? "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)" : "rgba(196,149,90,0.1)",
+                  border: "1px solid rgba(196,149,90,0.3)",
+                  color: quickFilter === "month" ? "#FFF" : "#A8803F",
+                }}
+              >
+                هذا الشهر
+              </button>
+              <button
+                onClick={() => handleQuickFilter("all")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${quickFilter === "all" ? "shadow-md" : ""}`}
+                style={{
+                  background: quickFilter === "all" ? "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)" : "rgba(196,149,90,0.1)",
+                  border: "1px solid rgba(196,149,90,0.3)",
+                  color: quickFilter === "all" ? "#FFF" : "#A8803F",
+                }}
+              >
+                الكل
+              </button>
+            </div>
+          </div>
+
+          {/* Custom Date Range */}
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs mb-2 font-medium" style={{ color: "#7A6550" }}>
+                من تاريخ
+              </label>
+              <input
+                type="date"
+                className="vip-input"
+                value={dateFrom}
+                onChange={(e) => {
+                  setDateFrom(e.target.value);
+                  setQuickFilter("");
+                  setPage(1);
+                }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs mb-2 font-medium" style={{ color: "#7A6550" }}>
+                إلى تاريخ
+              </label>
+              <input
+                type="date"
+                className="vip-input"
+                value={dateTo}
+                onChange={(e) => {
+                  setDateTo(e.target.value);
+                  setQuickFilter("");
+                  setPage(1);
+                }}
+              />
             </div>
           </div>
 
