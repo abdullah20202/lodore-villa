@@ -799,3 +799,102 @@ class ReservationsListView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+class ConvertToVIPView(APIView):
+    """
+    POST /api/management/reservations/convert-to-vip
+    Body: { "ids": [1, 2, 3] }
+
+    Convert selected reservation guests to VIP customers.
+    Staff only.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Check if user is staff
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {"ok": False, "message": "Access denied. Staff only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        from lodore.calendly_app.models import BookingLog
+        import logging
+        logger = logging.getLogger("lodore")
+
+        # Get reservation IDs from request
+        ids = request.data.get("ids", [])
+        if not ids or not isinstance(ids, list):
+            return Response(
+                {"ok": False, "message": "Invalid request. Please provide a list of IDs."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Get reservations
+        reservations = BookingLog.objects.filter(id__in=ids)
+        if not reservations.exists():
+            return Response(
+                {"ok": False, "message": "No reservations found with provided IDs."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Convert to VIP
+        created_count = 0
+        updated_count = 0
+        skipped_count = 0
+        errors = []
+
+        for reservation in reservations:
+            phone = reservation.phone
+            name = reservation.guest_name
+            email = reservation.guest_email
+
+            if not phone:
+                skipped_count += 1
+                errors.append(f"Reservation #{reservation.id}: No phone number")
+                continue
+
+            try:
+                # Create or update VIPPhone
+                vip, created = VIPPhone.objects.update_or_create(
+                    phone=phone,
+                    defaults={
+                        "full_name": name or "",
+                        "email": email or "",
+                    }
+                )
+
+                if created:
+                    created_count += 1
+                    logger.info(f"Created VIP customer: {phone} - {name}")
+                else:
+                    updated_count += 1
+                    logger.info(f"Updated VIP customer: {phone} - {name}")
+
+            except Exception as e:
+                skipped_count += 1
+                errors.append(f"Reservation #{reservation.id} ({phone}): {str(e)}")
+                logger.error(f"Failed to convert {phone} to VIP: {e}")
+
+        # Build response message
+        message_parts = []
+        if created_count > 0:
+            message_parts.append(f"{created_count} عميل جديد")
+        if updated_count > 0:
+            message_parts.append(f"{updated_count} عميل محدث")
+        if skipped_count > 0:
+            message_parts.append(f"{skipped_count} تم تخطيه")
+
+        message = "تم تحويل الضيوف إلى VIP: " + "، ".join(message_parts)
+
+        return Response(
+            {
+                "ok": True,
+                "message": message,
+                "created": created_count,
+                "updated": updated_count,
+                "skipped": skipped_count,
+                "errors": errors,
+            },
+            status=status.HTTP_200_OK,
+        )

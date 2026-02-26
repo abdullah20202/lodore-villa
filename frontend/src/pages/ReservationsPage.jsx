@@ -34,6 +34,8 @@ export default function ReservationsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [count, setCount] = useState(0);
   const [username, setUsername] = useState("");
+  const [selectedRows, setSelectedRows] = useState(new Set());
+  const [convertingToVIP, setConvertingToVIP] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -137,6 +139,69 @@ export default function ReservationsPage() {
     setDateTo(to);
     setQuickFilter(filter);
     setPage(1);
+  };
+
+  const handleCheckboxChange = (id) => {
+    const newSelected = new Set(selectedRows);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedRows(newSelected);
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      const allIds = reservations.map((res) => res.id);
+      setSelectedRows(new Set(allIds));
+    } else {
+      setSelectedRows(new Set());
+    }
+  };
+
+  const handleConvertToVIP = async () => {
+    if (selectedRows.size === 0) {
+      alert("يرجى تحديد حجوزات للتحويل");
+      return;
+    }
+
+    if (!confirm(`هل تريد تحويل ${selectedRows.size} ضيف إلى VIP؟`)) {
+      return;
+    }
+
+    setConvertingToVIP(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/auth/management/reservations/convert-to-vip`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ids: Array.from(selectedRows),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.ok) {
+        alert(data.message);
+        setSelectedRows(new Set());
+        // Reload reservations
+        loadReservations();
+      } else {
+        alert(data.message || "فشل التحويل");
+      }
+    } catch (error) {
+      console.error('Convert to VIP error:', error);
+      alert("حدث خطأ أثناء التحويل");
+    } finally {
+      setConvertingToVIP(false);
+    }
   };
 
   return (
@@ -291,9 +356,28 @@ export default function ReservationsPage() {
             </div>
           </div>
 
-          {/* Count */}
-          <div className="mt-4 text-sm" style={{ color: "#7A6550" }}>
-            الإجمالي: <strong>{count}</strong> حجز
+          {/* Count and Actions */}
+          <div className="mt-4 flex items-center justify-between">
+            <div className="text-sm" style={{ color: "#7A6550" }}>
+              الإجمالي: <strong>{count}</strong> حجز
+              {selectedRows.size > 0 && (
+                <span className="mr-4">
+                  محدد: <strong>{selectedRows.size}</strong>
+                </span>
+              )}
+            </div>
+            <button
+              onClick={handleConvertToVIP}
+              disabled={selectedRows.size === 0 || convertingToVIP}
+              className="px-6 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: selectedRows.size > 0 ? "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)" : "rgba(196,149,90,0.3)",
+                color: "#FFF",
+                boxShadow: selectedRows.size > 0 ? "0 4px 12px rgba(228,183,122,0.3)" : "none",
+              }}
+            >
+              {convertingToVIP ? "جارٍ التحويل..." : `تحويل إلى VIP ${selectedRows.size > 0 ? `(${selectedRows.size})` : ""}`}
+            </button>
           </div>
         </div>
 
@@ -321,6 +405,15 @@ export default function ReservationsPage() {
               <table className="w-full">
                 <thead>
                   <tr style={{ borderBottom: "2px solid rgba(196,149,90,0.2)" }}>
+                    <th className="px-4 py-3 text-center text-xs font-semibold" style={{ color: "#7A6550" }}>
+                      <input
+                        type="checkbox"
+                        checked={reservations.length > 0 && reservations.every(res => selectedRows.has(res.id))}
+                        onChange={handleSelectAll}
+                        className="w-4 h-4 cursor-pointer"
+                        style={{ accentColor: "#C4955A" }}
+                      />
+                    </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
                       اسم الضيف
                     </th>
@@ -344,6 +437,15 @@ export default function ReservationsPage() {
                       key={res.id}
                       style={{ borderBottom: "1px solid rgba(196,149,90,0.1)" }}
                     >
+                      <td className="px-4 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedRows.has(res.id)}
+                          onChange={() => handleCheckboxChange(res.id)}
+                          className="w-4 h-4 cursor-pointer"
+                          style={{ accentColor: "#C4955A" }}
+                        />
+                      </td>
                       <td className="px-4 py-3 text-sm" style={{ color: "#2C2416" }}>
                         {res.guest_name || "—"}
                       </td>
