@@ -15,6 +15,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getNominations, updateNominationStatus } from "../api/staff";
 import { clearTokens } from "../api/client";
+import ManagementLayout from "../components/ManagementLayout";
 
 const STATUS_OPTIONS = [
   { value: "", label: "جميع الحالات" },
@@ -200,72 +201,9 @@ export default function ManagementDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen" dir="rtl" style={{ background: "linear-gradient(135deg, #1a3449 0%, #25496b 100%)" }}>
-      {/* Header */}
-      <div
-        className="px-6 py-4 flex items-center justify-between"
-        style={{
-          background: "rgba(255,255,255,0.95)",
-          borderBottom: "2px solid rgba(196,149,90,0.3)",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
-        }}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)" }}
-          >
-            <span className="text-white font-bold text-lg">ل</span>
-          </div>
-          <div>
-            <h1 className="text-xl font-bold" style={{ color: "#2C2416" }}>
-              لوحة الإدارة
-            </h1>
-            <p className="text-xs" style={{ color: "#7A6550" }}>
-              لودوريه فيلا - إدارة الفعاليات
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate("/management/reservations")}
-            className="text-sm px-4 py-2 rounded-lg transition-all"
-            style={{
-              background: "rgba(196,149,90,0.1)",
-              border: "1px solid rgba(196,149,90,0.3)",
-              color: "#A8803F",
-            }}
-          >
-            الحجوزات
-          </button>
-          <span className="text-sm" style={{ color: "#7A6550" }}>
-            {username}
-          </span>
-          <button
-            onClick={handleLogout}
-            className="text-sm px-4 py-2 rounded-lg transition-all"
-            style={{
-              background: "rgba(196,149,90,0.1)",
-              border: "1px solid rgba(196,149,90,0.3)",
-              color: "#A8803F",
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = "rgba(196,149,90,0.2)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = "rgba(196,149,90,0.1)";
-            }}
-          >
-            تسجيل الخروج
-          </button>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Section Title */}
-        <div className="mb-6">
+    <ManagementLayout username={username}>
+      {/* Section Title */}
+      <div className="mb-6">
           <h2 className="text-2xl font-bold mb-2" style={{ color: "#F5EFE7", textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
             ترشيحات الضيوف
           </h2>
@@ -558,7 +496,6 @@ export default function ManagementDashboardPage() {
             )}
           </>
         )}
-      </div>
-    </div>
+    </ManagementLayout>
   );
 }

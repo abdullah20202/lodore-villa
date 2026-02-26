@@ -1,7 +1,7 @@
 /**
  * /management/login — Management login page
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { staffLogin } from "../api/staff";
 import { setTokens } from "../api/client";
@@ -13,6 +13,15 @@ export default function StaffLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const managementUsername = localStorage.getItem("management_username");
+    const accessToken = localStorage.getItem("access_token");
+    if (managementUsername && accessToken) {
+      navigate("/management/dashboard", { replace: true });
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
