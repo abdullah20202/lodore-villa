@@ -41,6 +41,8 @@ export default function ManagementDashboardPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [count, setCount] = useState(0);
   const [username, setUsername] = useState("");
+  const [selectedRows, setSelectedRows] = useState(new Set());
+  const [selectAll, setSelectAll] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -104,14 +106,26 @@ export default function ManagementDashboardPage() {
 
   const handleExportExcel = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/management/nominations/export?search=${search}&status=${statusFilter}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-        },
-      });
+      // Prepare IDs to export
+      let idsParam = '';
+      if (selectedRows.size > 0) {
+        const ids = Array.from(selectedRows).join(',');
+        idsParam = `&ids=${ids}`;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/auth/management/nominations/export?search=${search}&status=${statusFilter}${idsParam}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
+        console.error('Export failed:', response.status, response.statusText);
         throw new Error('Export failed');
       }
 
@@ -124,9 +138,36 @@ export default function ManagementDashboardPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+
+      // Clear selection after export
+      setSelectedRows(new Set());
+      setSelectAll(false);
     } catch (err) {
+      console.error('Export error:', err);
       alert('فشل تصدير الملف');
     }
+  };
+
+  const handleSelectAll = (e) => {
+    const checked = e.target.checked;
+    setSelectAll(checked);
+    if (checked) {
+      const allIds = new Set(nominations.map(n => n.id));
+      setSelectedRows(allIds);
+    } else {
+      setSelectedRows(new Set());
+    }
+  };
+
+  const handleSelectRow = (id) => {
+    const newSelected = new Set(selectedRows);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedRows(newSelected);
+    setSelectAll(newSelected.size === nominations.length);
   };
 
   const formatDate = (dateString) => {
@@ -250,26 +291,37 @@ export default function ManagementDashboardPage() {
           <div className="mt-4 flex items-center justify-between">
             <div className="text-sm" style={{ color: "#7A6550" }}>
               الإجمالي: <strong>{count}</strong> ترشيح
+              {selectedRows.size > 0 && (
+                <span className="mr-3" style={{ color: "#C4955A" }}>
+                  • المحدد: <strong>{selectedRows.size}</strong>
+                </span>
+              )}
             </div>
             <button
               onClick={handleExportExcel}
+              disabled={selectedRows.size === 0 && count > 0}
               className="text-sm px-4 py-2 rounded-lg transition-all flex items-center gap-2"
               style={{
-                background: "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)",
+                background: selectedRows.size === 0 && count > 0
+                  ? "rgba(196,149,90,0.3)"
+                  : "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)",
                 color: "#FFFFFF",
                 border: "none",
                 boxShadow: "0 2px 8px rgba(196,149,90,0.3)",
+                cursor: selectedRows.size === 0 && count > 0 ? "not-allowed" : "pointer",
               }}
               onMouseEnter={(e) => {
-                e.target.style.transform = "translateY(-1px)";
-                e.target.style.boxShadow = "0 4px 12px rgba(196,149,90,0.4)";
+                if (selectedRows.size > 0 || count === 0) {
+                  e.target.style.transform = "translateY(-1px)";
+                  e.target.style.boxShadow = "0 4px 12px rgba(196,149,90,0.4)";
+                }
               }}
               onMouseLeave={(e) => {
                 e.target.style.transform = "translateY(0)";
                 e.target.style.boxShadow = "0 2px 8px rgba(196,149,90,0.3)";
               }}
             >
-              📥 تصدير إلى Excel
+              📥 تصدير المحدد ({selectedRows.size > 0 ? selectedRows.size : 'اختر صفوف'})
             </button>
           </div>
         </div>
@@ -298,6 +350,15 @@ export default function ManagementDashboardPage() {
               <table className="w-full">
                 <thead>
                   <tr style={{ borderBottom: "2px solid rgba(196,149,90,0.2)" }}>
+                    <th className="px-4 py-3 text-center" style={{ color: "#7A6550", width: "50px" }}>
+                      <input
+                        type="checkbox"
+                        checked={selectAll}
+                        onChange={handleSelectAll}
+                        className="w-4 h-4 cursor-pointer"
+                        style={{ accentColor: "#C4955A" }}
+                      />
+                    </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
                       اسم الضيف
                     </th>
@@ -322,8 +383,20 @@ export default function ManagementDashboardPage() {
                   {nominations.map((nom) => (
                     <tr
                       key={nom.id}
-                      style={{ borderBottom: "1px solid rgba(196,149,90,0.1)" }}
+                      style={{
+                        borderBottom: "1px solid rgba(196,149,90,0.1)",
+                        background: selectedRows.has(nom.id) ? "rgba(228,183,122,0.1)" : "transparent"
+                      }}
                     >
+                      <td className="px-4 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedRows.has(nom.id)}
+                          onChange={() => handleSelectRow(nom.id)}
+                          className="w-4 h-4 cursor-pointer"
+                          style={{ accentColor: "#C4955A" }}
+                        />
+                      </td>
                       <td className="px-4 py-3 text-sm" style={{ color: "#2C2416" }}>
                         {nom.invited_name}
                       </td>
