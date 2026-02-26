@@ -191,25 +191,50 @@ class CalendlyWebhookView(APIView):
         else:
             status = BookingLog.STATUS_SCHEDULED
 
-        # --- Log to DB ---
-        log = BookingLog.objects.create(
-            provider=BookingLog.PROVIDER_CALENDLY,
-            event_type=event_type,
-            payload=payload,
-            phone=phone or "",
-            guest_name=name,
-            guest_email=email,
-            scheduled_at=scheduled_at,
-            status=status,
-            calendly_event_uri=event_uri,
-        )
-        logger.info(
-            "BookingLog created: id=%s event=%s phone=%s name=%s email=%s scheduled=%s status=%s",
-            log.pk, event_type, phone, name, email, scheduled_at, status
-        )
+        # --- Log to DB (prevent duplicates from webhook retries) ---
+        # Use update_or_create to handle webhook retries without creating duplicates
+        created = True  # Default to True for fallback case
+        if event_uri:
+            # If we have event_uri, use it to prevent duplicates
+            log, created = BookingLog.objects.update_or_create(
+                calendly_event_uri=event_uri,
+                event_type=event_type,
+                defaults={
+                    "provider": BookingLog.PROVIDER_CALENDLY,
+                    "payload": payload,
+                    "phone": phone or "",
+                    "guest_name": name,
+                    "guest_email": email,
+                    "scheduled_at": scheduled_at,
+                    "status": status,
+                }
+            )
+            action = "created" if created else "updated"
+            logger.info(
+                "BookingLog %s: id=%s event=%s phone=%s name=%s email=%s scheduled=%s status=%s",
+                action, log.pk, event_type, phone, name, email, scheduled_at, status
+            )
+        else:
+            # Fallback: create without duplicate check if no event_uri
+            log = BookingLog.objects.create(
+                provider=BookingLog.PROVIDER_CALENDLY,
+                event_type=event_type,
+                payload=payload,
+                phone=phone or "",
+                guest_name=name,
+                guest_email=email,
+                scheduled_at=scheduled_at,
+                status=status,
+                calendly_event_uri=event_uri,
+            )
+            created = True
+            logger.info(
+                "BookingLog created: id=%s event=%s phone=%s name=%s email=%s scheduled=%s status=%s",
+                log.pk, event_type, phone, name, email, scheduled_at, status
+            )
 
-        # --- Handle invitee.created ---
-        if event_type == "invitee.created" and phone:
+        # --- Handle invitee.created (only on first webhook, not retries) ---
+        if event_type == "invitee.created" and phone and created:
             try:
                 vip = VIPPhone.objects.get(phone=phone)
                 # Check if already booked
@@ -232,8 +257,8 @@ class CalendlyWebhookView(APIView):
             except VIPPhone.DoesNotExist:
                 logger.info("Calendly booking for non-VIP phone=%s (not updating)", phone)
 
-        # --- Handle invitee.canceled ---
-        if event_type == "invitee.canceled" and phone:
+        # --- Handle invitee.canceled (only on first webhook, not retries) ---
+        if event_type == "invitee.canceled" and phone and created:
             try:
                 vip = VIPPhone.objects.get(phone=phone)
                 if vip.bookings_count > 0:
