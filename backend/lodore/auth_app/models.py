@@ -13,6 +13,7 @@ class VIPPhone(models.Model):
     """
     phone = models.CharField(max_length=20, unique=True, db_index=True)
     full_name = models.CharField(max_length=200, blank=True, default="")
+    email = models.EmailField(max_length=254, blank=True, default="")
     booked = models.BooleanField(default=False)
     bookings_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)

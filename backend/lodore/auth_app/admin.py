@@ -7,9 +7,9 @@ admin.site.enable_tz_override = False
 
 @admin.register(VIPPhone)
 class VIPPhoneAdmin(admin.ModelAdmin):
-    list_display = ("phone", "full_name", "booked", "bookings_count", "created_at")
+    list_display = ("phone", "full_name", "email", "booked", "bookings_count", "created_at")
     list_filter = ("booked",)
-    search_fields = ("phone", "full_name")
+    search_fields = ("phone", "full_name", "email")
     readonly_fields = ("created_at",)
 
 

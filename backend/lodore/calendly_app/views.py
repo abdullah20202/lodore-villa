@@ -194,9 +194,12 @@ class CalendlyWebhookView(APIView):
                 # Update booking status and store name/email from Calendly
                 vip.booked = True
                 vip.bookings_count += 1
-                if name and not vip.full_name:
+                # Always update name and email from Calendly if provided
+                if name:
                     vip.full_name = name
-                vip.save(update_fields=["booked", "bookings_count", "full_name"])
+                if email:
+                    vip.email = email
+                vip.save(update_fields=["booked", "bookings_count", "full_name", "email"])
                 logger.info("VIP marked as booked: phone=%s name=%s email=%s", phone, name, email)
             except VIPPhone.DoesNotExist:
                 logger.info("Calendly booking for non-VIP phone=%s (not updating)", phone)
