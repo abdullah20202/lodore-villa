@@ -472,18 +472,26 @@ class NominationsListView(APIView):
         page_obj = paginator.get_page(page)
 
         # Serialize manually
-        results = [
-            {
+        results = []
+        for obj in page_obj.object_list:
+            # Get inviter name from VIPPhone
+            inviter_name = ""
+            try:
+                inviter_vip = VIPPhone.objects.get(phone=obj.inviter_phone)
+                inviter_name = inviter_vip.full_name
+            except VIPPhone.DoesNotExist:
+                inviter_name = ""
+
+            results.append({
                 "id": obj.id,
                 "invited_name": obj.invited_name,
                 "invited_phone": obj.invited_phone,
                 "inviter_phone": obj.inviter_phone,
+                "inviter_name": inviter_name,
                 "status": obj.status,
                 "approved": obj.approved,
                 "created_at": obj.created_at.isoformat(),
-            }
-            for obj in page_obj.object_list
-        ]
+            })
 
         return Response(
             {

@@ -310,8 +310,15 @@ export default function ManagementDashboardPage() {
                           </a>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm font-mono" style={{ color: "#7A6550" }}>
-                        {nom.inviter_phone}
+                      <td className="px-4 py-3 text-sm" style={{ color: "#7A6550" }}>
+                        {nom.inviter_name ? (
+                          <div>
+                            <div style={{ color: "#2C2416", fontWeight: "500" }}>{nom.inviter_name}</div>
+                            <div className="font-mono text-xs" style={{ color: "#9A8060" }}>{nom.inviter_phone}</div>
+                          </div>
+                        ) : (
+                          <div className="font-mono">{nom.inviter_phone}</div>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <select
