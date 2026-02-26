@@ -25,6 +25,11 @@ export default function ManagementLayout({ children, username }) {
       path: "/management/reservations",
       icon: "📅",
     },
+    {
+      label: "إدارة VIP",
+      path: "/management/vip",
+      icon: "⭐",
+    },
   ];
 
   const isActive = (path) => {

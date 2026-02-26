@@ -898,3 +898,154 @@ class ConvertToVIPView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class UploadVIPDataView(APIView):
+    """
+    POST /api/management/vip/upload
+    Upload Excel file with VIP customer data.
+    
+    Expected Excel columns:
+    - الاسم or Name (required)
+    - الجوال or Phone (required)
+    - البريد الإلكتروني or Email (optional)
+    
+    Staff only.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Check if user is staff
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {"ok": False, "message": "Access denied. Staff only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Check if file was uploaded
+        if 'file' not in request.FILES:
+            return Response(
+                {"ok": False, "message": "No file uploaded. Please upload an Excel file."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        file = request.FILES['file']
+
+        # Validate file extension
+        if not file.name.endswith(('.xlsx', '.xls')):
+            return Response(
+                {"ok": False, "message": "Invalid file format. Please upload an Excel file (.xlsx or .xls)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            from openpyxl import load_workbook
+            import io
+        except ImportError:
+            return Response(
+                {"ok": False, "message": "Excel processing not available."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        try:
+            # Load workbook
+            wb = load_workbook(io.BytesIO(file.read()))
+            ws = wb.active
+
+            # Find header row and column mapping
+            headers = {}
+            for col_idx, cell in enumerate(ws[1], start=1):
+                header = str(cell.value or "").strip().lower()
+                if header in ['الاسم', 'name', 'الاسم الكامل', 'full name']:
+                    headers['name'] = col_idx
+                elif header in ['الجوال', 'phone', 'رقم الجوال', 'mobile', 'الهاتف']:
+                    headers['phone'] = col_idx
+                elif header in ['البريد الإلكتروني', 'email', 'البريد', 'الإيميل']:
+                    headers['email'] = col_idx
+
+            # Validate required columns
+            if 'phone' not in headers:
+                return Response(
+                    {"ok": False, "message": "Missing required column: Phone number (الجوال or Phone)"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Process rows
+            created_count = 0
+            updated_count = 0
+            skipped_count = 0
+            errors = []
+
+            for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+                if not row or all(cell is None or str(cell).strip() == '' for cell in row):
+                    continue
+
+                try:
+                    # Extract data
+                    phone_raw = str(row[headers['phone'] - 1] or "").strip()
+                    name = str(row[headers.get('name', 1) - 1] or "").strip() if 'name' in headers else ""
+                    email = str(row[headers.get('email', 1) - 1] or "").strip() if 'email' in headers else ""
+
+                    if not phone_raw:
+                        skipped_count += 1
+                        errors.append(f"Row {row_idx}: No phone number")
+                        continue
+
+                    # Normalize phone
+                    phone = normalize_phone(phone_raw)
+
+                    # Create or update VIPPhone
+                    vip, created = VIPPhone.objects.update_or_create(
+                        phone=phone,
+                        defaults={
+                            "full_name": name,
+                            "email": email,
+                        }
+                    )
+
+                    if created:
+                        created_count += 1
+                        logger.info(f"Created VIP from Excel: {phone} - {name}")
+                    else:
+                        updated_count += 1
+                        logger.info(f"Updated VIP from Excel: {phone} - {name}")
+
+                except ValueError as e:
+                    skipped_count += 1
+                    errors.append(f"Row {row_idx}: Invalid phone number - {phone_raw}")
+                except Exception as e:
+                    skipped_count += 1
+                    errors.append(f"Row {row_idx}: {str(e)}")
+
+            # Build response message
+            message_parts = []
+            if created_count > 0:
+                message_parts.append(f"{created_count} عميل جديد")
+            if updated_count > 0:
+                message_parts.append(f"{updated_count} عميل محدث")
+            if skipped_count > 0:
+                message_parts.append(f"{skipped_count} تم تخطيه")
+
+            message = "تم رفع البيانات: " + "، ".join(message_parts) if message_parts else "لم يتم معالجة أي بيانات"
+
+            logger.info(f"VIP Excel upload by {request.user.username}: {created_count} created, {updated_count} updated, {skipped_count} skipped")
+
+            return Response(
+                {
+                    "ok": True,
+                    "message": message,
+                    "created": created_count,
+                    "updated": updated_count,
+                    "skipped": skipped_count,
+                    "errors": errors[:20],  # Limit errors to first 20
+                    "total_errors": len(errors),
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            logger.error(f"Excel upload error: {e}")
+            return Response(
+                {"ok": False, "message": f"Error processing file: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

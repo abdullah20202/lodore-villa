@@ -8,6 +8,7 @@ import SorryPage from "./pages/SorryPage";
 import StaffLoginPage from "./pages/StaffLoginPage";
 import ManagementDashboardPage from "./pages/ManagementDashboardPage";
 import ReservationsPage from "./pages/ReservationsPage";
+import VIPManagementPage from "./pages/VIPManagementPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/management/login" element={<StaffLoginPage />} />
         <Route path="/management/dashboard" element={<ManagementDashboardPage />} />
         <Route path="/management/reservations" element={<ReservationsPage />} />
+        <Route path="/management/vip" element={<VIPManagementPage />} />
         {/* Legacy route redirect */}
         <Route path="/management/nominations" element={<ManagementDashboardPage />} />
 
