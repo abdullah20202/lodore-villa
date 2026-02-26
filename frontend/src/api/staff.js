@@ -34,9 +34,19 @@ export const getNominations = async (params = {}) => {
  * @returns {Promise<{ok: boolean, message: string}>}
  */
 export const updateNominationStatus = async (nominationId, status) => {
-  const { data } = await apiClient.patch(
+  const { data} = await apiClient.patch(
     `/api/auth/management/nominations/${nominationId}`,
     { status }
   );
+  return data;
+};
+
+/**
+ * Get reservations list with search/filter/pagination
+ * @param {Object} params - { search, status, page, page_size }
+ * @returns {Promise<{ok: boolean, results: Array, count: number, page: number, total_pages: number}>}
+ */
+export const getReservations = async (params = {}) => {
+  const { data } = await apiClient.get("/api/auth/management/reservations", { params });
   return data;
 };

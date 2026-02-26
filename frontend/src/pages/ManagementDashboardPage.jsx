@@ -228,6 +228,17 @@ export default function ManagementDashboardPage() {
         </div>
 
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate("/management/reservations")}
+            className="text-sm px-4 py-2 rounded-lg transition-all"
+            style={{
+              background: "rgba(196,149,90,0.1)",
+              border: "1px solid rgba(196,149,90,0.3)",
+              color: "#A8803F",
+            }}
+          >
+            الحجوزات
+          </button>
           <span className="text-sm" style={{ color: "#7A6550" }}>
             {username}
           </span>

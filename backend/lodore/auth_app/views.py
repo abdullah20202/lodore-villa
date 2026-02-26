@@ -698,3 +698,79 @@ class ExportNominationsView(APIView):
         logger.info("Nominations exported to Excel by %s", request.user.username)
 
         return response
+
+
+class ReservationsListView(APIView):
+    """
+    GET /api/management/reservations
+    Query params: search, status, page, page_size
+
+    Returns paginated list of reservations/bookings.
+    Staff only.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Check if user is staff
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {"ok": False, "message": "Access denied. Staff only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        from lodore.calendly_app.models import BookingLog
+
+        # Get query parameters
+        search = request.GET.get("search", "").strip()
+        status_filter = request.GET.get("status", "").strip()
+        page = int(request.GET.get("page", 1))
+        page_size = int(request.GET.get("page_size", 20))
+
+        # Build query
+        queryset = BookingLog.objects.all()
+
+        # Search by name, phone, or email
+        if search:
+            queryset = queryset.filter(
+                Q(guest_name__icontains=search) |
+                Q(phone__icontains=search) |
+                Q(guest_email__icontains=search)
+            )
+
+        # Filter by status
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+
+        # Order by scheduled_at desc
+        queryset = queryset.order_by("-scheduled_at", "-received_at")
+
+        # Paginate
+        paginator = Paginator(queryset, page_size)
+        page_obj = paginator.get_page(page)
+
+        # Serialize
+        results = []
+        for obj in page_obj.object_list:
+            results.append({
+                "id": obj.id,
+                "guest_name": obj.guest_name,
+                "phone": obj.phone,
+                "guest_email": obj.guest_email,
+                "scheduled_at": obj.scheduled_at.isoformat() if obj.scheduled_at else None,
+                "status": obj.status,
+                "event_type": obj.event_type,
+                "received_at": obj.received_at.isoformat(),
+            })
+
+        return Response(
+            {
+                "ok": True,
+                "results": results,
+                "count": paginator.count,
+                "page": page,
+                "total_pages": paginator.num_pages,
+                "has_next": page_obj.has_next(),
+                "has_previous": page_obj.has_previous(),
+            },
+            status=status.HTTP_200_OK,
+        )

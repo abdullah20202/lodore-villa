@@ -168,16 +168,43 @@ class CalendlyWebhookView(APIView):
         name = invitee_info.get("name", "")
         email = invitee_info.get("email", "")
 
+        # --- Extract scheduled time and event URI ---
+        invitee_data = payload.get("payload", {})
+        scheduled_at_str = invitee_data.get("start_time", "")
+        event_uri = invitee_data.get("uri", "")
+
+        # Parse scheduled time
+        from datetime import datetime
+        scheduled_at = None
+        if scheduled_at_str:
+            try:
+                scheduled_at = datetime.fromisoformat(scheduled_at_str.replace('Z', '+00:00'))
+            except Exception as e:
+                logger.warning("Failed to parse scheduled time: %s - %s", scheduled_at_str, e)
+
+        # Determine status based on event type
+        if event_type == "invitee.created":
+            status = BookingLog.STATUS_SCHEDULED
+        elif event_type == "invitee.canceled":
+            status = BookingLog.STATUS_CANCELED
+        else:
+            status = BookingLog.STATUS_SCHEDULED
+
         # --- Log to DB ---
         log = BookingLog.objects.create(
             provider=BookingLog.PROVIDER_CALENDLY,
             event_type=event_type,
             payload=payload,
             phone=phone or "",
+            guest_name=name,
+            guest_email=email,
+            scheduled_at=scheduled_at,
+            status=status,
+            calendly_event_uri=event_uri,
         )
         logger.info(
-            "BookingLog created: id=%s event=%s phone=%s name=%s email=%s",
-            log.pk, event_type, phone, name, email
+            "BookingLog created: id=%s event=%s phone=%s name=%s email=%s scheduled=%s status=%s",
+            log.pk, event_type, phone, name, email, scheduled_at, status
         )
 
         # --- Handle invitee.created ---

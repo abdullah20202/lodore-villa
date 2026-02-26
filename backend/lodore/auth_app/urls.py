@@ -9,6 +9,7 @@ from .views import (
     NominationsListView,
     UpdateNominationStatusView,
     ExportNominationsView,
+    ReservationsListView,
 )
 
 urlpatterns = [
@@ -24,4 +25,5 @@ urlpatterns = [
     path("management/nominations", NominationsListView.as_view(), name="nominations-list"),
     path("management/nominations/export", ExportNominationsView.as_view(), name="export-nominations"),
     path("management/nominations/<int:nomination_id>", UpdateNominationStatusView.as_view(), name="update-nomination-status"),
+    path("management/reservations", ReservationsListView.as_view(), name="reservations-list"),
 ]
