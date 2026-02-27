@@ -49,7 +49,7 @@ export default function App() {
         {/* Redirect root → /verify */}
         <Route path="/" element={<Navigate to="/verify" replace />} />
 
-        {/* Catch-all → /verify */}
+        {/* Catch-all - check if management route, else verify */}
         <Route path="*" element={<Navigate to="/verify" replace />} />
       </Routes>
     </BrowserRouter>

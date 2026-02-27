@@ -89,7 +89,13 @@ apiClient.interceptors.response.use(
       const refreshToken = getRefreshToken();
       if (!refreshToken) {
         clearTokens();
-        window.location.href = "/verify";
+        // Check if we're in management system
+        if (window.location.pathname.startsWith("/management")) {
+          localStorage.removeItem("management_username");
+          window.location.href = "/management/login";
+        } else {
+          window.location.href = "/verify";
+        }
         return Promise.reject(error);
       }
 
@@ -107,7 +113,13 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         clearTokens();
-        window.location.href = "/verify";
+        // Check if we're in management system
+        if (window.location.pathname.startsWith("/management")) {
+          localStorage.removeItem("management_username");
+          window.location.href = "/management/login";
+        } else {
+          window.location.href = "/verify";
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
