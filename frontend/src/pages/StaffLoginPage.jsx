@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { staffLogin } from "../api/staff";
-import { setTokens } from "../api/client";
+import { setTokens, clearTokens } from "../api/client";
 import Logo from "../components/Logo";
 
 export default function StaffLoginPage() {
@@ -20,6 +20,10 @@ export default function StaffLoginPage() {
     const accessToken = localStorage.getItem("access_token");
     if (managementUsername && accessToken) {
       navigate("/management/dashboard", { replace: true });
+    } else {
+      // Clear any old tokens when showing login page
+      clearTokens();
+      localStorage.removeItem("management_username");
     }
   }, [navigate]);
 
