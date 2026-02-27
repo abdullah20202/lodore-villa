@@ -189,6 +189,49 @@ export default function ManagementDashboardPage() {
     setSelectAllPages(false); // Deselect all pages when selecting individual rows
   };
 
+  const handleConvertToVIP = async () => {
+    if (selectedRows.size === 0) {
+      alert("يرجى تحديد ترشيحات للتحويل");
+      return;
+    }
+
+    if (!confirm(`هل تريد تحويل ${selectedRows.size} ضيف إلى VIP؟`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/auth/management/nominations/convert-to-vip`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ids: Array.from(selectedRows),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.ok) {
+        alert(data.message);
+        setSelectedRows(new Set());
+        setSelectAll(false);
+        setSelectAllPages(false);
+        // Reload nominations
+        loadNominations();
+      } else {
+        alert(data.message || "فشل التحويل");
+      }
+    } catch (error) {
+      console.error('Convert to VIP error:', error);
+      alert("حدث خطأ أثناء التحويل");
+    }
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -311,6 +354,33 @@ export default function ManagementDashboardPage() {
               📥 تصدير المحدد (
                 {selectAllPages ? `الكل ${count}` : selectedRows.size > 0 ? selectedRows.size : 'اختر صفوف'}
               )
+            </button>
+
+            <button
+              onClick={handleConvertToVIP}
+              disabled={selectedRows.size === 0}
+              className="text-sm px-4 py-2 rounded-lg transition-all flex items-center gap-2"
+              style={{
+                background: selectedRows.size === 0
+                  ? "rgba(102,187,106,0.3)"
+                  : "linear-gradient(135deg, #66BB6A 0%, #43A047 100%)",
+                color: "#FFFFFF",
+                border: "none",
+                boxShadow: "0 2px 8px rgba(102,187,106,0.3)",
+                cursor: selectedRows.size === 0 ? "not-allowed" : "pointer",
+              }}
+              onMouseEnter={(e) => {
+                if (selectedRows.size > 0) {
+                  e.target.style.transform = "translateY(-1px)";
+                  e.target.style.boxShadow = "0 4px 12px rgba(102,187,106,0.4)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 2px 8px rgba(102,187,106,0.3)";
+              }}
+            >
+              ⭐ تحويل إلى VIP ({selectedRows.size > 0 ? selectedRows.size : 'اختر صفوف'})
             </button>
           </div>
         </div>

@@ -900,6 +900,104 @@ class ConvertToVIPView(APIView):
         )
 
 
+class ConvertNominationsToVIPView(APIView):
+    """
+    POST /api/management/nominations/convert-to-vip
+    Body: { "ids": [1, 2, 3] }
+
+    Convert selected guest nominations to VIP customers.
+    Staff only.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Check if user is staff
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {"ok": False, "message": "Access denied. Staff only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        import logging
+        logger = logging.getLogger("lodore")
+
+        # Get nomination IDs from request
+        ids = request.data.get("ids", [])
+        if not ids or not isinstance(ids, list):
+            return Response(
+                {"ok": False, "message": "Invalid request. Please provide a list of IDs."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Get nominations
+        nominations = InvitedContact.objects.filter(id__in=ids)
+        if not nominations.exists():
+            return Response(
+                {"ok": False, "message": "No nominations found with provided IDs."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Convert to VIP
+        created_count = 0
+        updated_count = 0
+        skipped_count = 0
+        errors = []
+
+        for nomination in nominations:
+            phone = nomination.invited_phone
+            name = nomination.invited_name
+
+            if not phone:
+                skipped_count += 1
+                errors.append(f"Nomination #{nomination.id}: No phone number")
+                continue
+
+            try:
+                # Create or update VIPPhone
+                vip, created = VIPPhone.objects.update_or_create(
+                    phone=phone,
+                    defaults={
+                        "full_name": name or "",
+                        "email": "",
+                    }
+                )
+
+                if created:
+                    created_count += 1
+                    logger.info(f"Created VIP from nomination: {phone} - {name}")
+                else:
+                    updated_count += 1
+                    logger.info(f"Updated VIP from nomination: {phone} - {name}")
+
+            except Exception as e:
+                skipped_count += 1
+                errors.append(f"Nomination #{nomination.id} ({phone}): {str(e)}")
+                logger.error(f"Failed to convert nomination {phone} to VIP: {e}")
+
+        # Build response message
+        message_parts = []
+        if created_count > 0:
+            message_parts.append(f"{created_count} عميل جديد")
+        if updated_count > 0:
+            message_parts.append(f"{updated_count} عميل محدث")
+        if skipped_count > 0:
+            message_parts.append(f"{skipped_count} تم تخطيه")
+
+        message = "تم تحويل الضيوف إلى VIP: " + "، ".join(message_parts)
+
+        return Response(
+            {
+                "ok": True,
+                "message": message,
+                "created": created_count,
+                "updated": updated_count,
+                "skipped": skipped_count,
+                "errors": errors,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
 class UploadVIPDataView(APIView):
     """
     POST /api/management/vip/upload
