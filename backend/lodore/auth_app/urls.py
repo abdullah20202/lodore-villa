@@ -12,6 +12,9 @@ from .views import (
     ReservationsListView,
     ConvertToVIPView,
     UploadVIPDataView,
+    VIPListView,
+    ManageVIPView,
+    DeleteVIPView,
 )
 
 urlpatterns = [
@@ -30,4 +33,7 @@ urlpatterns = [
     path("management/reservations", ReservationsListView.as_view(), name="reservations-list"),
     path("management/reservations/convert-to-vip", ConvertToVIPView.as_view(), name="convert-to-vip"),
     path("management/vip/upload", UploadVIPDataView.as_view(), name="upload-vip-data"),
+    path("management/vip/list", VIPListView.as_view(), name="vip-list"),
+    path("management/vip/manage", ManageVIPView.as_view(), name="manage-vip"),
+    path("management/vip/<int:vip_id>", DeleteVIPView.as_view(), name="delete-vip"),
 ]

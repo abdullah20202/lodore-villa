@@ -1049,3 +1049,187 @@ class UploadVIPDataView(APIView):
                 {"ok": False, "message": f"Error processing file: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class VIPListView(APIView):
+    """
+    GET /api/management/vip/list
+    Query params: search, page, page_size
+
+    Returns paginated list of VIP customers.
+    Staff only.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Check if user is staff
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {"ok": False, "message": "Access denied. Staff only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Get query parameters
+        search = request.GET.get("search", "").strip()
+        page = int(request.GET.get("page", 1))
+        page_size = int(request.GET.get("page_size", 20))
+
+        # Build query
+        queryset = VIPPhone.objects.all()
+
+        # Search by name, phone, or email
+        if search:
+            queryset = queryset.filter(
+                Q(full_name__icontains=search) |
+                Q(phone__icontains=search) |
+                Q(email__icontains=search)
+            )
+
+        # Order by created_at desc
+        queryset = queryset.order_by("-created_at")
+
+        # Paginate
+        paginator = Paginator(queryset, page_size)
+        page_obj = paginator.get_page(page)
+
+        # Serialize
+        results = []
+        for obj in page_obj.object_list:
+            results.append({
+                "id": obj.id,
+                "full_name": obj.full_name,
+                "phone": obj.phone,
+                "email": obj.email,
+                "booked": obj.booked,
+                "bookings_count": obj.bookings_count,
+                "created_at": obj.created_at.isoformat(),
+            })
+
+        return Response(
+            {
+                "ok": True,
+                "results": results,
+                "count": paginator.count,
+                "page": page,
+                "total_pages": paginator.num_pages,
+                "has_next": page_obj.has_next(),
+                "has_previous": page_obj.has_previous(),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class ManageVIPView(APIView):
+    """
+    POST /api/management/vip/manage
+    Body: { "phone": "...", "full_name": "...", "email": "..." }
+
+    Add or update VIP customer.
+    Staff only.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Check if user is staff
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {"ok": False, "message": "Access denied. Staff only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        phone = request.data.get("phone", "").strip()
+        full_name = request.data.get("full_name", "").strip()
+        email = request.data.get("email", "").strip()
+
+        if not phone:
+            return Response(
+                {"ok": False, "message": "رقم الجوال مطلوب"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            # Normalize phone
+            phone = normalize_phone(phone)
+
+            # Create or update VIP
+            vip, created = VIPPhone.objects.update_or_create(
+                phone=phone,
+                defaults={
+                    "full_name": full_name,
+                    "email": email,
+                }
+            )
+
+            logger.info(
+                f"VIP {'created' if created else 'updated'} by {request.user.username}: {phone} - {full_name}"
+            )
+
+            return Response(
+                {
+                    "ok": True,
+                    "message": "تم إضافة العميل بنجاح" if created else "تم تحديث العميل بنجاح",
+                    "created": created,
+                    "vip": {
+                        "id": vip.id,
+                        "phone": vip.phone,
+                        "full_name": vip.full_name,
+                        "email": vip.email,
+                        "booked": vip.booked,
+                        "bookings_count": vip.bookings_count,
+                    }
+                },
+                status=status.HTTP_200_OK,
+            )
+        except ValueError as e:
+            return Response(
+                {"ok": False, "message": f"رقم الجوال غير صالح: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            logger.error(f"VIP manage error: {e}")
+            return Response(
+                {"ok": False, "message": f"حدث خطأ: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class DeleteVIPView(APIView):
+    """
+    DELETE /api/management/vip/<id>
+    
+    Delete VIP customer.
+    Staff only.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, vip_id):
+        # Check if user is staff
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {"ok": False, "message": "Access denied. Staff only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            vip = VIPPhone.objects.get(id=vip_id)
+            phone = vip.phone
+            name = vip.full_name
+            vip.delete()
+
+            logger.info(f"VIP deleted by {request.user.username}: {phone} - {name}")
+
+            return Response(
+                {"ok": True, "message": "تم حذف العميل بنجاح"},
+                status=status.HTTP_200_OK,
+            )
+        except VIPPhone.DoesNotExist:
+            return Response(
+                {"ok": False, "message": "العميل غير موجود"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            logger.error(f"VIP delete error: {e}")
+            return Response(
+                {"ok": False, "message": f"حدث خطأ: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
