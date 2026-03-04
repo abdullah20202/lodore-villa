@@ -183,36 +183,70 @@ class CalendlyWebhookView(APIView):
             except Exception as e:
                 logger.warning("Failed to parse scheduled time: %s - %s", scheduled_at_str, e)
 
-        # Determine status based on event type
+        # Determine booking status based on event type
         if event_type == "invitee.created":
-            status = BookingLog.STATUS_SCHEDULED
+            booking_status = BookingLog.STATUS_SCHEDULED
         elif event_type == "invitee.canceled":
-            status = BookingLog.STATUS_CANCELED
+            booking_status = BookingLog.STATUS_CANCELED
+        elif event_type == "invitee.rescheduled":
+            booking_status = BookingLog.STATUS_RESCHEDULED
         else:
-            status = BookingLog.STATUS_SCHEDULED
+            booking_status = BookingLog.STATUS_SCHEDULED
+
+        # --- Check for reschedule scenario before creating log ---
+        # When user reschedules, Calendly cancels old booking then creates new one
+        # We want to mark the old canceled record as "rescheduled" and create new "scheduled" record
+        if event_type == "invitee.created" and (phone or email):
+            from datetime import timedelta
+            from django.utils import timezone
+            recent_time = timezone.now() - timedelta(minutes=5)
+
+            old_canceled_query = BookingLog.objects.filter(
+                provider=BookingLog.PROVIDER_CALENDLY,
+                status=BookingLog.STATUS_CANCELED,
+                received_at__gte=recent_time
+            )
+
+            if phone:
+                old_canceled_query = old_canceled_query.filter(phone=phone)
+            elif email:
+                old_canceled_query = old_canceled_query.filter(guest_email=email)
+
+            old_canceled_log = old_canceled_query.first()
+            if old_canceled_log:
+                # Update the old canceled record to show it was rescheduled
+                old_time = old_canceled_log.scheduled_at
+                old_canceled_log.status = BookingLog.STATUS_RESCHEDULED
+                old_canceled_log.event_type = "invitee.rescheduled"
+                old_canceled_log.save(update_fields=['status', 'event_type'])
+                logger.info(
+                    "Marked old booking as rescheduled: id=%s phone=%s name=%s old_time=%s new_time=%s",
+                    old_canceled_log.pk, phone, name, old_time, scheduled_at
+                )
 
         # --- Log to DB (prevent duplicates from webhook retries) ---
-        # Use update_or_create to handle webhook retries without creating duplicates
         created = True  # Default to True for fallback case
+
         if event_uri:
             # If we have event_uri, use it to prevent duplicates
+            # Only use calendly_event_uri to find the record, so cancellations update the same record
             log, created = BookingLog.objects.update_or_create(
                 calendly_event_uri=event_uri,
-                event_type=event_type,
                 defaults={
                     "provider": BookingLog.PROVIDER_CALENDLY,
+                    "event_type": event_type,
                     "payload": payload,
                     "phone": phone or "",
                     "guest_name": name,
                     "guest_email": email,
                     "scheduled_at": scheduled_at,
-                    "status": status,
+                    "status": booking_status,
                 }
             )
             action = "created" if created else "updated"
             logger.info(
                 "BookingLog %s: id=%s event=%s phone=%s name=%s email=%s scheduled=%s status=%s",
-                action, log.pk, event_type, phone, name, email, scheduled_at, status
+                action, log.pk, event_type, phone, name, email, scheduled_at, booking_status
             )
         else:
             # Fallback: create without duplicate check if no event_uri
@@ -224,41 +258,43 @@ class CalendlyWebhookView(APIView):
                 guest_name=name,
                 guest_email=email,
                 scheduled_at=scheduled_at,
-                status=status,
+                status=booking_status,
                 calendly_event_uri=event_uri,
             )
             created = True
             logger.info(
                 "BookingLog created: id=%s event=%s phone=%s name=%s email=%s scheduled=%s status=%s",
-                log.pk, event_type, phone, name, email, scheduled_at, status
+                log.pk, event_type, phone, name, email, scheduled_at, booking_status
             )
 
         # --- Handle invitee.created (only on first webhook, not retries) ---
-        if event_type == "invitee.created" and phone and created:
-            try:
-                vip = VIPPhone.objects.get(phone=phone)
-                # Check if already booked
-                if vip.booked:
-                    logger.warning("Booking attempt rejected: phone=%s already booked", phone)
-                    return Response(
-                        {"received": False, "error": "User already has an active booking"},
-                        status=status.HTTP_409_CONFLICT
-                    )
-                # Update booking status and store name/email from Calendly
-                vip.booked = True
-                vip.bookings_count += 1
-                # Always update name and email from Calendly if provided
-                if name:
-                    vip.full_name = name
-                if email:
-                    vip.email = email
-                vip.save(update_fields=["booked", "bookings_count", "full_name", "email"])
-                logger.info("VIP marked as booked: phone=%s name=%s email=%s", phone, name, email)
-            except VIPPhone.DoesNotExist:
-                logger.info("Calendly booking for non-VIP phone=%s (not updating)", phone)
+        if event_type == "invitee.created" and created:
+            # Update VIP status if phone exists
+            if phone:
+                try:
+                    vip = VIPPhone.objects.get(phone=phone)
+                    # Check if already booked
+                    if vip.booked:
+                        logger.warning("Booking attempt rejected: phone=%s already booked", phone)
+                        return Response(
+                            {"received": False, "error": "User already has an active booking"},
+                            status=status.HTTP_409_CONFLICT
+                        )
+                    # Update booking status and store name/email from Calendly
+                    vip.booked = True
+                    vip.bookings_count += 1
+                    # Always update name and email from Calendly if provided
+                    if name:
+                        vip.full_name = name
+                    if email:
+                        vip.email = email
+                    vip.save(update_fields=["booked", "bookings_count", "full_name", "email"])
+                    logger.info("VIP marked as booked: phone=%s name=%s email=%s", phone, name, email)
+                except VIPPhone.DoesNotExist:
+                    logger.info("Calendly booking for non-VIP phone=%s (not updating)", phone)
 
-        # --- Handle invitee.canceled (only on first webhook, not retries) ---
-        if event_type == "invitee.canceled" and phone and created:
+        # --- Handle invitee.canceled (only when updating existing record, not retries) ---
+        if event_type == "invitee.canceled" and phone and not created:
             try:
                 vip = VIPPhone.objects.get(phone=phone)
                 if vip.bookings_count > 0:
@@ -269,5 +305,21 @@ class CalendlyWebhookView(APIView):
                 logger.info("VIP booking canceled: phone=%s", phone)
             except VIPPhone.DoesNotExist:
                 pass
+
+        # --- Handle invitee.rescheduled (only when updating existing record, not retries) ---
+        # Rescheduled means the booking moved to a different time but is still active
+        # We don't change bookings_count, just log the event and update name/email if provided
+        if event_type == "invitee.rescheduled" and phone and not created:
+            try:
+                vip = VIPPhone.objects.get(phone=phone)
+                # Update name and email from Calendly if provided
+                if name:
+                    vip.full_name = name
+                if email:
+                    vip.email = email
+                vip.save(update_fields=["full_name", "email"])
+                logger.info("VIP booking rescheduled: phone=%s name=%s scheduled=%s", phone, name, scheduled_at)
+            except VIPPhone.DoesNotExist:
+                logger.info("Calendly rescheduled for non-VIP phone=%s (not updating)", phone)
 
         return Response({"received": True}, status=status.HTTP_200_OK)
