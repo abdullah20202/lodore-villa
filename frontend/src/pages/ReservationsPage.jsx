@@ -95,6 +95,13 @@ export default function ReservationsPage() {
     });
   };
 
+  const formatLocalDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const handleQuickFilter = (filter) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -104,26 +111,26 @@ export default function ReservationsPage() {
 
     switch (filter) {
       case "today":
-        from = today.toISOString().split('T')[0];
-        to = today.toISOString().split('T')[0];
+        from = formatLocalDate(today);
+        to = formatLocalDate(today);
         break;
       case "tomorrow":
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        from = tomorrow.toISOString().split('T')[0];
-        to = tomorrow.toISOString().split('T')[0];
+        from = formatLocalDate(tomorrow);
+        to = formatLocalDate(tomorrow);
         break;
       case "week":
-        from = today.toISOString().split('T')[0];
+        from = formatLocalDate(today);
         const weekEnd = new Date(today);
         weekEnd.setDate(weekEnd.getDate() + 7);
-        to = weekEnd.toISOString().split('T')[0];
+        to = formatLocalDate(weekEnd);
         break;
       case "month":
-        from = today.toISOString().split('T')[0];
+        from = formatLocalDate(today);
         const monthEnd = new Date(today);
         monthEnd.setMonth(monthEnd.getMonth() + 1);
-        to = monthEnd.toISOString().split('T')[0];
+        to = formatLocalDate(monthEnd);
         break;
       case "all":
         from = "";
