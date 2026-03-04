@@ -6,6 +6,7 @@ import BookPage from "./pages/BookPage";
 import SuccessPage from "./pages/SuccessPage";
 import SorryPage from "./pages/SorryPage";
 import StaffLoginPage from "./pages/StaffLoginPage";
+import DashboardPage from "./pages/DashboardPage";
 import ManagementDashboardPage from "./pages/ManagementDashboardPage";
 import ReservationsPage from "./pages/ReservationsPage";
 import VIPManagementPage from "./pages/VIPManagementPage";
@@ -40,11 +41,10 @@ export default function App() {
 
         {/* Management routes */}
         <Route path="/management/login" element={<StaffLoginPage />} />
-        <Route path="/management/dashboard" element={<ManagementDashboardPage />} />
+        <Route path="/management/dashboard" element={<DashboardPage />} />
+        <Route path="/management/nominations" element={<ManagementDashboardPage />} />
         <Route path="/management/reservations" element={<ReservationsPage />} />
         <Route path="/management/vip" element={<VIPManagementPage />} />
-        {/* Legacy route redirect */}
-        <Route path="/management/nominations" element={<ManagementDashboardPage />} />
 
         {/* Redirect root → /verify */}
         <Route path="/" element={<Navigate to="/verify" replace />} />

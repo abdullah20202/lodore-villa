@@ -17,6 +17,7 @@ from .views import (
     ManageVIPView,
     DeleteVIPView,
 )
+from .dashboard_views import DashboardStatsView
 
 urlpatterns = [
     # VIP Customer endpoints
@@ -28,6 +29,7 @@ urlpatterns = [
 
     # Management endpoints
     path("management/login", StaffLoginView.as_view(), name="staff-login"),
+    path("management/dashboard/stats", DashboardStatsView.as_view(), name="dashboard-stats"),
     path("management/nominations", NominationsListView.as_view(), name="nominations-list"),
     path("management/nominations/export", ExportNominationsView.as_view(), name="export-nominations"),
     path("management/nominations/convert-to-vip", ConvertNominationsToVIPView.as_view(), name="convert-nominations-to-vip"),

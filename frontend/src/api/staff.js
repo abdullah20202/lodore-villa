@@ -50,3 +50,12 @@ export const getReservations = async (params = {}) => {
   const { data } = await apiClient.get("/api/auth/management/reservations", { params });
   return data;
 };
+
+/**
+ * Get dashboard statistics
+ * @returns {Promise<{ok: boolean, vip_stats: Object, nomination_stats: Object, reservation_stats: Object, trends: Object}>}
+ */
+export const getDashboardStats = async () => {
+  const { data } = await apiClient.get("/api/auth/management/dashboard/stats");
+  return data;
+};
