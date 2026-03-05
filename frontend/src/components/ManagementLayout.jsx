@@ -16,8 +16,13 @@ export default function ManagementLayout({ children, username }) {
 
   const menuItems = [
     {
-      label: "الترشيحات",
+      label: "لوحة التحكم",
       path: "/management/dashboard",
+      icon: "📊",
+    },
+    {
+      label: "الترشيحات",
+      path: "/management/nominations",
       icon: "👥",
     },
     {
@@ -33,14 +38,11 @@ export default function ManagementLayout({ children, username }) {
   ];
 
   const isActive = (path) => {
-    if (path === "/management/dashboard") {
-      return location.pathname === path || location.pathname === "/management/nominations";
-    }
     return location.pathname === path;
   };
 
   return (
-    <div className="min-h-screen" dir="rtl" style={{ background: "linear-gradient(135deg, #1a3449 0%, #25496b 100%)" }}>
+    <div className="min-h-screen" dir="rtl" style={{ background: "#FAF9F6" }}>
       {/* Header */}
       <div
         className="px-6 py-4 flex items-center justify-between"
