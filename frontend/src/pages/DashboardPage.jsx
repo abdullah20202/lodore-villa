@@ -45,62 +45,62 @@ export default function DashboardPage() {
     navigate("/management/login", { replace: true });
   };
 
-  const StatCard = ({ title, value, subtitle, icon, color }) => (
+  const StatCard = ({ title, value, subtitle, icon, gradient }) => (
     <div
-      className="rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+      className="rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border"
       style={{
-        background: `linear-gradient(135deg, ${color}15 0%, ${color}05 100%)`,
-        border: `1px solid ${color}30`,
+        background: gradient,
+        borderColor: "rgba(196,149,90,0.2)",
       }}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium mb-2" style={{ color: "#7A6550" }}>
-            {title}
-          </p>
-          <p className="text-3xl font-bold mb-1" style={{ color: color }}>
-            {value}
-          </p>
-          {subtitle && (
-            <p className="text-xs" style={{ color: "#A8803F" }}>
-              {subtitle}
-            </p>
-          )}
-        </div>
+      <div className="flex items-start justify-between mb-4">
         <div
-          className="w-12 h-12 rounded-lg flex items-center justify-center"
-          style={{ background: `${color}20` }}
+          className="w-14 h-14 rounded-xl flex items-center justify-center shadow-sm"
+          style={{ background: "rgba(255,255,255,0.9)" }}
         >
-          <span className="text-2xl">{icon}</span>
+          <span className="text-3xl">{icon}</span>
         </div>
       </div>
+      <h3 className="text-sm font-medium mb-2" style={{ color: "#7A6550" }}>
+        {title}
+      </h3>
+      <p className="text-4xl font-bold mb-1" style={{ color: "#C4955A" }}>
+        {value}
+      </p>
+      {subtitle && (
+        <p className="text-xs" style={{ color: "#A8803F" }}>
+          {subtitle}
+        </p>
+      )}
     </div>
   );
 
   const TrendChart = ({ data }) => {
     if (!data || data.length === 0) return null;
 
-    const maxValue = Math.max(...data.map(d => d.count));
+    const maxValue = Math.max(...data.map(d => d.count), 1);
 
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         {data.map((item, index) => (
-          <div key={index} className="flex items-center gap-3">
-            <span className="text-xs font-medium" style={{ color: "#7A6550", width: "80px" }}>
-              {new Date(item.date).toLocaleDateString("ar-SA", { month: "short", day: "numeric" })}
+          <div key={index} className="flex items-center gap-4">
+            <span className="text-sm font-medium" style={{ color: "#7A6550", width: "90px" }}>
+              {new Date(item.date).toLocaleDateString("ar-SA", { weekday: "short", month: "short", day: "numeric" })}
             </span>
-            <div className="flex-1 h-8 rounded-lg overflow-hidden" style={{ background: "rgba(196,149,90,0.1)" }}>
+            <div className="flex-1 h-10 rounded-xl overflow-hidden" style={{ background: "rgba(196,149,90,0.08)" }}>
               <div
-                className="h-full rounded-lg transition-all duration-500"
+                className="h-full rounded-xl transition-all duration-500 flex items-center justify-end px-3"
                 style={{
-                  width: `${maxValue > 0 ? (item.count / maxValue) * 100 : 0}%`,
+                  width: `${(item.count / maxValue) * 100}%`,
                   background: "linear-gradient(90deg, #E4B77A 0%, #C4955A 100%)",
+                  minWidth: item.count > 0 ? "40px" : "0",
                 }}
-              />
+              >
+                {item.count > 0 && (
+                  <span className="text-sm font-bold text-white">{item.count}</span>
+                )}
+              </div>
             </div>
-            <span className="text-sm font-bold" style={{ color: "#C4955A", width: "30px" }}>
-              {item.count}
-            </span>
           </div>
         ))}
       </div>
@@ -124,122 +124,122 @@ export default function DashboardPage() {
 
   return (
     <ManagementLayout username={username} onLogout={handleLogout}>
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="p-8 max-w-7xl mx-auto" style={{ background: "#FAF9F6", minHeight: "100vh" }}>
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2" style={{ color: "#7A6550" }}>
+          <h1 className="text-4xl font-bold mb-2" style={{ color: "#7A6550" }}>
             لوحة التحكم
           </h1>
-          <p className="text-sm" style={{ color: "#A8803F" }}>
+          <p className="text-base" style={{ color: "#A8803F" }}>
             نظرة عامة على جميع البيانات والإحصائيات
           </p>
         </div>
 
         {/* VIP Stats */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold mb-4" style={{ color: "#7A6550" }}>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-5" style={{ color: "#7A6550" }}>
             إحصائيات العملاء المميزين
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatCard
               title="إجمالي العملاء المميزين"
-              value={stats.vip_stats.total}
+              value={stats.vip_stats.total.toLocaleString()}
               subtitle={`${stats.vip_stats.recent_added} مضاف خلال 7 أيام`}
               icon="👥"
-              color="#8B4513"
+              gradient="linear-gradient(135deg, #FFF9F0 0%, #FFFFFF 100%)"
             />
             <StatCard
               title="الحجوزات النشطة"
-              value={stats.vip_stats.active_bookings}
+              value={stats.vip_stats.active_bookings.toLocaleString()}
               subtitle="حجز نشط حالياً"
               icon="✅"
-              color="#2E7D32"
+              gradient="linear-gradient(135deg, #F0FFF4 0%, #FFFFFF 100%)"
             />
             <StatCard
-              title="بدون حجوزات"
-              value={stats.vip_stats.total - stats.vip_stats.active_bookings}
-              subtitle="متاح للحجز"
+              title="متاح للحجز"
+              value={(stats.vip_stats.total - stats.vip_stats.active_bookings).toLocaleString()}
+              subtitle="بدون حجوزات"
               icon="📅"
-              color="#1976D2"
+              gradient="linear-gradient(135deg, #F0F9FF 0%, #FFFFFF 100%)"
             />
           </div>
         </div>
 
         {/* Reservation Stats */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold mb-4" style={{ color: "#7A6550" }}>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-5" style={{ color: "#7A6550" }}>
             إحصائيات الحجوزات
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <StatCard
               title="حجوزات اليوم"
-              value={stats.reservation_stats.today}
+              value={stats.reservation_stats.today.toLocaleString()}
               subtitle="اليوم"
               icon="📆"
-              color="#FF6B6B"
+              gradient="linear-gradient(135deg, #FFF5F5 0%, #FFFFFF 100%)"
             />
             <StatCard
               title="حجوزات الأسبوع"
-              value={stats.reservation_stats.week}
+              value={stats.reservation_stats.week.toLocaleString()}
               subtitle="هذا الأسبوع"
               icon="📊"
-              color="#4ECDC4"
+              gradient="linear-gradient(135deg, #FFFBEB 0%, #FFFFFF 100%)"
             />
             <StatCard
               title="حجوزات الشهر"
-              value={stats.reservation_stats.month}
+              value={stats.reservation_stats.month.toLocaleString()}
               subtitle="هذا الشهر"
               icon="📈"
-              color="#95E1D3"
+              gradient="linear-gradient(135deg, #F5F3FF 0%, #FFFFFF 100%)"
             />
             <StatCard
               title="إجمالي الحجوزات"
-              value={stats.reservation_stats.total}
+              value={stats.reservation_stats.total.toLocaleString()}
               subtitle={`${stats.reservation_stats.recent} خلال 7 أيام`}
               icon="🎯"
-              color="#F38181"
+              gradient="linear-gradient(135deg, #FFF9F0 0%, #FFFFFF 100%)"
             />
           </div>
         </div>
 
         {/* Status Breakdown & Nominations */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Status Breakdown */}
           <div
-            className="rounded-xl p-6 shadow-lg"
+            className="rounded-2xl p-6 shadow-sm border"
             style={{
-              background: "linear-gradient(135deg, #FFFFFF 0%, #FAF9F6 100%)",
-              border: "1px solid rgba(196,149,90,0.2)",
+              background: "#FFFFFF",
+              borderColor: "rgba(196,149,90,0.2)",
             }}
           >
-            <h3 className="text-lg font-bold mb-4" style={{ color: "#7A6550" }}>
+            <h3 className="text-xl font-bold mb-6" style={{ color: "#7A6550" }}>
               توزيع حالات الحجوزات
             </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: "rgba(102,187,106,0.08)" }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full" style={{ background: "#66BB6A" }} />
-                  <span className="text-sm" style={{ color: "#7A6550" }}>محجوز</span>
+                  <div className="w-4 h-4 rounded-full" style={{ background: "#66BB6A" }} />
+                  <span className="text-base font-medium" style={{ color: "#7A6550" }}>محجوز</span>
                 </div>
-                <span className="text-lg font-bold" style={{ color: "#66BB6A" }}>
+                <span className="text-2xl font-bold" style={{ color: "#66BB6A" }}>
                   {stats.reservation_stats.status_breakdown.scheduled}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: "rgba(239,83,80,0.08)" }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full" style={{ background: "#EF5350" }} />
-                  <span className="text-sm" style={{ color: "#7A6550" }}>ملغي</span>
+                  <div className="w-4 h-4 rounded-full" style={{ background: "#EF5350" }} />
+                  <span className="text-base font-medium" style={{ color: "#7A6550" }}>ملغي</span>
                 </div>
-                <span className="text-lg font-bold" style={{ color: "#EF5350" }}>
+                <span className="text-2xl font-bold" style={{ color: "#EF5350" }}>
                   {stats.reservation_stats.status_breakdown.canceled}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: "rgba(255,183,77,0.08)" }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full" style={{ background: "#FFB74D" }} />
-                  <span className="text-sm" style={{ color: "#7A6550" }}>معاد الجدولة</span>
+                  <div className="w-4 h-4 rounded-full" style={{ background: "#FFB74D" }} />
+                  <span className="text-base font-medium" style={{ color: "#7A6550" }}>معاد الجدولة</span>
                 </div>
-                <span className="text-lg font-bold" style={{ color: "#FFB74D" }}>
+                <span className="text-2xl font-bold" style={{ color: "#FFB74D" }}>
                   {stats.reservation_stats.status_breakdown.rescheduled}
                 </span>
               </div>
@@ -248,38 +248,32 @@ export default function DashboardPage() {
 
           {/* Nominations Stats */}
           <div
-            className="rounded-xl p-6 shadow-lg"
+            className="rounded-2xl p-6 shadow-sm border"
             style={{
-              background: "linear-gradient(135deg, #FFFFFF 0%, #FAF9F6 100%)",
-              border: "1px solid rgba(196,149,90,0.2)",
+              background: "#FFFFFF",
+              borderColor: "rgba(196,149,90,0.2)",
             }}
           >
-            <h3 className="text-lg font-bold mb-4" style={{ color: "#7A6550" }}>
+            <h3 className="text-xl font-bold mb-6" style={{ color: "#7A6550" }}>
               إحصائيات الترشيحات
             </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm" style={{ color: "#7A6550" }}>إجمالي الترشيحات</span>
-                <span className="text-lg font-bold" style={{ color: "#C4955A" }}>
+            <div className="space-y-5">
+              <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: "rgba(196,149,90,0.08)" }}>
+                <span className="text-base font-medium" style={{ color: "#7A6550" }}>إجمالي الترشيحات</span>
+                <span className="text-2xl font-bold" style={{ color: "#C4955A" }}>
                   {stats.nomination_stats.total}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm" style={{ color: "#7A6550" }}>في انتظار الموافقة</span>
-                <span className="text-lg font-bold" style={{ color: "#FF9800" }}>
+              <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: "rgba(255,152,0,0.08)" }}>
+                <span className="text-base font-medium" style={{ color: "#7A6550" }}>في انتظار الموافقة</span>
+                <span className="text-2xl font-bold" style={{ color: "#FF9800" }}>
                   {stats.nomination_stats.pending}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm" style={{ color: "#7A6550" }}>تمت الموافقة</span>
-                <span className="text-lg font-bold" style={{ color: "#4CAF50" }}>
+              <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: "rgba(76,175,80,0.08)" }}>
+                <span className="text-base font-medium" style={{ color: "#7A6550" }}>تمت الموافقة</span>
+                <span className="text-2xl font-bold" style={{ color: "#4CAF50" }}>
                   {stats.nomination_stats.approved}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm" style={{ color: "#7A6550" }}>خلال 7 أيام</span>
-                <span className="text-lg font-bold" style={{ color: "#2196F3" }}>
-                  {stats.nomination_stats.recent}
                 </span>
               </div>
             </div>
@@ -288,13 +282,13 @@ export default function DashboardPage() {
 
         {/* Daily Trend */}
         <div
-          className="rounded-xl p-6 shadow-lg"
+          className="rounded-2xl p-6 shadow-sm border"
           style={{
-            background: "linear-gradient(135deg, #FFFFFF 0%, #FAF9F6 100%)",
-            border: "1px solid rgba(196,149,90,0.2)",
+            background: "#FFFFFF",
+            borderColor: "rgba(196,149,90,0.2)",
           }}
         >
-          <h3 className="text-lg font-bold mb-6" style={{ color: "#7A6550" }}>
+          <h3 className="text-xl font-bold mb-6" style={{ color: "#7A6550" }}>
             اتجاه الحجوزات اليومية (آخر 7 أيام)
           </h3>
           <TrendChart data={stats.trends.daily_reservations} />
