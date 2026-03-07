@@ -76,10 +76,11 @@ class DashboardStatsView(APIView):
             status=BookingLog.STATUS_SCHEDULED
         ).count()
 
-        # This month's reservations (received this month)
+        # This month's reservations (received this month, up to today)
         month_reservations = BookingLog.objects.filter(
             provider=BookingLog.PROVIDER_CALENDLY,
             received_at__gte=month_start,
+            received_at__lte=now,
             status=BookingLog.STATUS_SCHEDULED
         ).count()
 
