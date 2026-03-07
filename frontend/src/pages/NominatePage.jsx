@@ -5,7 +5,7 @@
  * Optionally provide their own phone number
  * No verification required - open to anyone with the link
  */
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../components/Logo";
 import SupportButton from "../components/SupportButton";
@@ -139,7 +139,7 @@ export default function NominatePage() {
                 letterSpacing: "0.15em",
               }}
             >
-              شارك التجربة مع من تحب
+              ترشيحات خاصة ومختارة بعناية
             </span>
           </div>
 
