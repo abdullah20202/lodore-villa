@@ -138,25 +138,28 @@ export default function NominatePage() {
 
           {/* Arabic message */}
           <p className="text-sm leading-loose mb-4" style={{ color: "#3C2E1E" }}>
-            سعدنا باستضافتك في <strong>لودوريه فيلا</strong> وشاركتك معنا تجربة
-            فريدة من الرقي والخصوصية.
+            السلام عليكم،
           </p>
           <p className="text-sm leading-loose mb-4" style={{ color: "#3C2E1E" }}>
-            نأمل أن تشاركنا أسماء من ترى أنهم سيقدرون هذه التجربة الاستثنائية،
-            ليتسنى لنا دعوتهم والاحتفاء بهم كما احتفينا بك.
+            معكم <strong>سلطان الشعيبي</strong> مؤسس <strong>لودوريه</strong>.
           </p>
-          <p className="text-sm leading-loose" style={{ color: "#3C2E1E" }}>
-            يمكنك ترشيح حتى <strong>3 أشخاص</strong> تود مشاركة هذه التجربة معهم.
+          <p className="text-sm leading-loose mb-4" style={{ color: "#3C2E1E" }}>
+            نظرًا لكونكم من الذين سبق لهم الحجز لتجربة <strong>لودوريه فيلا</strong>، وحرصًا
+            منا على أن تبقى هذه التجربة بدعوات محدودة ومختارة بعناية، يسعدني استقبال
+            ترشيحاتكم لأشخاص ترون أنهم يليقون بحضور هذه التجربة الخاصة.
           </p>
 
           <div className="gold-divider my-5" />
 
           {/* Signature */}
+          <p className="text-sm leading-loose text-right" style={{ color: "#3C2E1E" }}>
+            مع خالص التقدير،
+          </p>
           <p className="text-sm font-semibold text-right" style={{ color: "#2C2416" }}>
             سلطان الشعيبي
           </p>
           <p className="text-xs text-right mt-0.5" style={{ color: "#A8803F" }}>
-            لودوريه
+            L'Odore
           </p>
 
           <div className="gold-divider my-5" />
@@ -164,24 +167,27 @@ export default function NominatePage() {
           {/* English message */}
           <div style={{ textAlign: "left", direction: "ltr" }}>
             <p className="text-xs leading-relaxed mb-3" style={{ color: "#7A6550", fontStyle: "italic" }}>
-              We were delighted to host you at <strong>L'Odore Villa</strong> and share
-              with you a unique experience of elegance and privacy.
+              Peace be upon you,
             </p>
             <p className="text-xs leading-relaxed mb-3" style={{ color: "#7A6550", fontStyle: "italic" }}>
-              We hope you will share with us the names of those you believe would
-              appreciate this exceptional experience, so we may invite and celebrate
-              them as we did with you.
+              This is <strong>Sultan Alsheaibi</strong>, founder of <strong>L'Odore</strong>.
             </p>
-            <p className="text-xs leading-relaxed" style={{ color: "#7A6550", fontStyle: "italic" }}>
-              You may nominate up to <strong>3 people</strong> to share this experience.
+            <p className="text-xs leading-relaxed mb-3" style={{ color: "#7A6550", fontStyle: "italic" }}>
+              As you are among those who have previously booked the <strong>L'Odore Villa</strong> experience,
+              and in our commitment to keeping this experience exclusive with carefully selected invitations,
+              I am pleased to welcome your nominations for individuals you believe would be worthy of
+              attending this special experience.
             </p>
 
             <div className="gold-divider my-5" />
 
-            <p className="text-xs font-semibold mt-4" style={{ color: "#2C2416" }}>
+            <p className="text-xs leading-relaxed text-left" style={{ color: "#7A6550", fontStyle: "italic" }}>
+              With sincere appreciation,
+            </p>
+            <p className="text-xs font-semibold mt-2" style={{ color: "#2C2416" }}>
               Sultan Alsheaibi
             </p>
-            <p className="text-xs text-left mt-0.5" style={{ color: "#2C2416" }}>
+            <p className="text-xs text-left mt-0.5" style={{ color: "#A8803F" }}>
               L'Odore
             </p>
           </div>
