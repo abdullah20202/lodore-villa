@@ -281,446 +281,452 @@ export default function VIPManagementPage() {
 
   return (
     <ManagementLayout username={username}>
-      {/* Section Title */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2" style={{ color: "#F5EFE7", textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
-          إدارة عملاء VIP
-        </h2>
-        <p className="text-sm" style={{ color: "#E8DCC8", textShadow: "0 1px 4px rgba(0,0,0,0.2)" }}>
-          رفع وإدارة بيانات عملاء VIP من خلال ملفات Excel أو إضافة يدوية
-        </p>
-      </div>
+      <div className="p-8 max-w-7xl mx-auto" style={{ background: "#F8FAFC", minHeight: "100vh" }}>
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2" style={{ color: "#1E293B" }}>
+            إدارة عملاء VIP
+          </h1>
+          <p className="text-lg font-medium" style={{ color: "#64748B" }}>
+            رفع وإدارة بيانات عملاء VIP من خلال ملفات Excel أو إضافة يدوية
+          </p>
+        </div>
 
-      {/* VIP List Section */}
-      <div className="mb-6 p-6 rounded-xl" style={{ background: "rgba(255,255,255,0.95)", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold" style={{ color: "#2C2416" }}>
-            قائمة عملاء VIP ({pagination.totalCount})
-          </h3>
+        {/* VIP List Section */}
+        <div className="mb-6 p-6 rounded-xl shadow-lg" style={{ background: "#FFFFFF", border: "2px solid #E2E8F0" }}>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold" style={{ color: "#1E293B" }}>
+              قائمة عملاء VIP ({pagination.totalCount})
+            </h2>
+            <button
+              onClick={openAddModal}
+              className="px-6 py-3 rounded-lg text-sm font-bold transition-all shadow-lg"
+              style={{
+                background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                color: "#FFF",
+                border: "2px solid #10B981",
+              }}
+            >
+              + إضافة عميل جديد
+            </button>
+          </div>
+
+          {/* Search */}
+          <form onSubmit={handleSearch} className="mb-6 flex gap-3">
+            <input
+              type="text"
+              placeholder="ابحث بالاسم أو الجوال أو البريد الإلكتروني..."
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="flex-1 px-4 py-3 rounded-lg font-medium"
+              style={{
+                border: "2px solid #E2E8F0",
+                background: "#FFFFFF",
+                color: "#1E293B",
+              }}
+            />
+            <button
+              type="submit"
+              className="px-6 py-3 rounded-lg text-sm font-bold transition-all shadow-lg"
+              style={{
+                background: "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
+                border: "2px solid #3B82F6",
+                color: "#FFF",
+              }}
+            >
+              بحث
+            </button>
+          </form>
+
+          {/* Table */}
+          {loading ? (
+            <div className="text-center py-12">
+              <div
+                className="w-16 h-16 mx-auto rounded-full border-4 border-t-transparent animate-spin"
+                style={{ borderColor: "#3B82F6", borderTopColor: "transparent" }}
+              />
+              <p className="mt-4 font-semibold" style={{ color: "#334155" }}>
+                جارٍ التحميل...
+              </p>
+            </div>
+          ) : vipList.length === 0 ? (
+            <div className="text-center py-12 rounded-xl" style={{ background: "#F1F5F9" }}>
+              <p className="font-bold text-lg" style={{ color: "#64748B" }}>لا توجد بيانات عملاء VIP</p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto rounded-xl" style={{ border: "2px solid #E2E8F0" }}>
+                <table className="w-full">
+                  <thead>
+                    <tr style={{ borderBottom: "2px solid #E2E8F0", background: "#F1F5F9" }}>
+                      <th className="text-right px-4 py-4 text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
+                        الاسم
+                      </th>
+                      <th className="text-right px-4 py-4 text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
+                        الجوال
+                      </th>
+                      <th className="text-right px-4 py-4 text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
+                        البريد الإلكتروني
+                      </th>
+                      <th className="text-right px-4 py-4 text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
+                        عدد الحجوزات
+                      </th>
+                      <th className="text-center px-4 py-4 text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
+                        الإجراءات
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vipList.map((vip) => (
+                      <tr
+                        key={vip.id}
+                        style={{
+                          borderBottom: "1px solid #E2E8F0",
+                        }}
+                      >
+                        <td className="px-4 py-4 text-sm font-bold" style={{ color: "#1E293B" }}>
+                          {vip.full_name || "-"}
+                        </td>
+                        <td className="px-4 py-4 text-sm font-mono font-bold" style={{ color: "#1E293B" }}>
+                          {vip.phone}
+                        </td>
+                        <td className="px-4 py-4 text-sm font-medium" style={{ color: "#64748B" }}>
+                          {vip.email || "-"}
+                        </td>
+                        <td className="px-4 py-4 text-sm font-bold" style={{ color: "#2563EB" }}>
+                          {vip.bookings_count || 0}
+                        </td>
+                        <td className="px-4 py-4 text-center">
+                          <button
+                            onClick={() => openEditModal(vip)}
+                            className="ml-2 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow"
+                            style={{
+                              background: "#DBEAFE",
+                              border: "2px solid #3B82F6",
+                              color: "#1D4ED8",
+                            }}
+                          >
+                            تعديل
+                          </button>
+                          <button
+                            onClick={() => handleDelete(vip)}
+                            className="px-4 py-2 rounded-lg text-xs font-bold transition-all shadow"
+                            style={{
+                              background: "#FEE2E2",
+                              border: "2px solid #EF4444",
+                              color: "#DC2626",
+                            }}
+                          >
+                            حذف
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {pagination.totalPages > 1 && (
+                <div className="flex justify-center items-center gap-3 mt-6">
+                  <button
+                    onClick={() => handlePageChange(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1}
+                    className="px-6 py-3 rounded-lg text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                    style={{
+                      background: "#FFFFFF",
+                      border: "2px solid #3B82F6",
+                      color: "#2563EB",
+                    }}
+                  >
+                    السابق
+                  </button>
+                  <span className="text-sm px-4 font-bold" style={{ color: "#334155" }}>
+                    صفحة {pagination.currentPage} من {pagination.totalPages}
+                  </span>
+                  <button
+                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage === pagination.totalPages}
+                    className="px-6 py-3 rounded-lg text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                    style={{
+                      background: "#FFFFFF",
+                      border: "2px solid #3B82F6",
+                      color: "#2563EB",
+                    }}
+                  >
+                    التالي
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Upload Section */}
+        <div className="mb-6 p-6 rounded-xl shadow-lg" style={{ background: "#FFFFFF", border: "2px solid #E2E8F0" }}>
+          <h2 className="text-2xl font-bold mb-6" style={{ color: "#1E293B" }}>
+            رفع ملف Excel
+          </h2>
+
+          {/* Instructions */}
+          <div className="mb-6 p-6 rounded-lg shadow" style={{ background: "#EFF6FF", border: "2px solid #DBEAFE" }}>
+            <h3 className="font-bold mb-3 text-lg" style={{ color: "#1D4ED8" }}>
+              تعليمات:
+            </h3>
+            <ul className="text-sm space-y-2 font-medium" style={{ color: "#334155" }}>
+              <li>• يجب أن يحتوي الملف على الأعمدة التالية: <strong>الاسم</strong> أو <strong>Name</strong>، <strong>الجوال</strong> أو <strong>Phone</strong></li>
+              <li>• عمود <strong>البريد الإلكتروني</strong> أو <strong>Email</strong> اختياري</li>
+              <li>• رقم الجوال مطلوب ويجب أن يبدأ بـ 05 ويتكون من 10 أرقام</li>
+              <li>• الصف الأول يجب أن يحتوي على أسماء الأعمدة</li>
+              <li>• الصفوف الفارغة سيتم تجاهلها</li>
+            </ul>
+            <button
+              onClick={downloadTemplate}
+              className="mt-4 text-sm px-5 py-2.5 rounded-lg font-bold transition-all shadow"
+              style={{
+                background: "#DBEAFE",
+                border: "2px solid #3B82F6",
+                color: "#1D4ED8",
+              }}
+            >
+              📥 تحميل نموذج Excel
+            </button>
+          </div>
+
+          {/* File Input */}
+          <div className="mb-6">
+            <label className="block text-sm mb-3 font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>
+              اختر ملف Excel
+            </label>
+            <input
+              id="excel-file-input"
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleFileChange}
+              className="block w-full text-sm font-medium"
+              style={{
+                padding: "16px",
+                border: "2px solid #E2E8F0",
+                borderRadius: "12px",
+                background: "#FFFFFF",
+                color: "#1E293B",
+              }}
+            />
+            {selectedFile && (
+              <p className="mt-3 text-sm font-bold" style={{ color: "#059669" }}>
+                ✓ الملف المحدد: <strong>{selectedFile.name}</strong>
+              </p>
+            )}
+          </div>
+
+          {/* Upload Button */}
           <button
-            onClick={openAddModal}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            onClick={handleUpload}
+            disabled={!selectedFile || uploading}
+            className="px-8 py-4 rounded-lg text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
             style={{
-              background: "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)",
+              background: selectedFile && !uploading ? "linear-gradient(135deg, #10B981 0%, #059669 100%)" : "#CBD5E1",
               color: "#FFF",
-              boxShadow: "0 4px 12px rgba(228,183,122,0.3)",
+              border: selectedFile && !uploading ? "2px solid #10B981" : "2px solid #94A3B8",
             }}
           >
-            + إضافة عميل جديد
+            {uploading ? "جارٍ الرفع..." : "📤 رفع الملف"}
           </button>
         </div>
 
-        {/* Search */}
-        <form onSubmit={handleSearch} className="mb-4 flex gap-2">
-          <input
-            type="text"
-            placeholder="ابحث بالاسم أو الجوال أو البريد الإلكتروني..."
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="flex-1 px-4 py-2 rounded-lg text-sm"
+        {/* Results Section */}
+        {uploadResult && (
+          <div
+            className="p-6 rounded-xl shadow-lg"
             style={{
-              border: "2px solid rgba(196,149,90,0.3)",
-              background: "rgba(255,255,255,0.9)",
-              color: "#2C2416",
-            }}
-          />
-          <button
-            type="submit"
-            className="px-6 py-2 rounded-lg text-sm font-medium transition-all"
-            style={{
-              background: "rgba(196,149,90,0.2)",
-              border: "1px solid rgba(196,149,90,0.3)",
-              color: "#A8803F",
+              background: uploadResult.success ? "#ECFDF5" : "#FEF2F2",
+              border: `2px solid ${uploadResult.success ? "#10B981" : "#EF4444"}`,
             }}
           >
-            بحث
-          </button>
-        </form>
+            <h2
+              className="text-2xl font-bold mb-4"
+              style={{ color: uploadResult.success ? "#065F46" : "#991B1B" }}
+            >
+              {uploadResult.success ? "✓ نجحت العملية" : "✗ فشلت العملية"}
+            </h2>
 
-        {/* Table */}
-        {loading ? (
-          <div className="text-center py-8" style={{ color: "#7A6550" }}>
-            جارٍ التحميل...
-          </div>
-        ) : vipList.length === 0 ? (
-          <div className="text-center py-8" style={{ color: "#7A6550" }}>
-            لا توجد بيانات عملاء VIP
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}>
-                <thead>
-                  <tr>
-                    <th className="text-right px-4 py-2 text-sm font-semibold" style={{ color: "#7A6550" }}>
-                      الاسم
-                    </th>
-                    <th className="text-right px-4 py-2 text-sm font-semibold" style={{ color: "#7A6550" }}>
-                      الجوال
-                    </th>
-                    <th className="text-right px-4 py-2 text-sm font-semibold" style={{ color: "#7A6550" }}>
-                      البريد الإلكتروني
-                    </th>
-                    <th className="text-right px-4 py-2 text-sm font-semibold" style={{ color: "#7A6550" }}>
-                      عدد الحجوزات
-                    </th>
-                    <th className="text-center px-4 py-2 text-sm font-semibold" style={{ color: "#7A6550" }}>
-                      الإجراءات
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vipList.map((vip) => (
-                    <tr
-                      key={vip.id}
-                      className="rounded-lg"
-                      style={{
-                        background: "rgba(245,239,231,0.5)",
-                        borderBottom: "1px solid rgba(196,149,90,0.1)",
-                      }}
-                    >
-                      <td className="px-4 py-3 text-sm" style={{ color: "#2C2416" }}>
-                        {vip.full_name || "-"}
-                      </td>
-                      <td className="px-4 py-3 text-sm font-mono" style={{ color: "#2C2416" }}>
-                        {vip.phone}
-                      </td>
-                      <td className="px-4 py-3 text-sm" style={{ color: "#2C2416" }}>
-                        {vip.email || "-"}
-                      </td>
-                      <td className="px-4 py-3 text-sm" style={{ color: "#2C2416" }}>
-                        {vip.bookings_count || 0}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => openEditModal(vip)}
-                          className="ml-2 px-3 py-1 rounded text-xs transition-all"
-                          style={{
-                            background: "rgba(33,150,243,0.1)",
-                            border: "1px solid rgba(33,150,243,0.3)",
-                            color: "#1976D2",
-                          }}
-                        >
-                          تعديل
-                        </button>
-                        <button
-                          onClick={() => handleDelete(vip)}
-                          className="px-3 py-1 rounded text-xs transition-all"
-                          style={{
-                            background: "rgba(239,83,80,0.1)",
-                            border: "1px solid rgba(239,83,80,0.3)",
-                            color: "#C62828",
-                          }}
-                        >
-                          حذف
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <p className="mb-6 font-medium text-lg" style={{ color: "#1E293B" }}>
+              {uploadResult.message}
+            </p>
 
-            {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-4">
-                <button
-                  onClick={() => handlePageChange(pagination.currentPage - 1)}
-                  disabled={pagination.currentPage === 1}
-                  className="px-4 py-2 rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    background: "rgba(196,149,90,0.2)",
-                    border: "1px solid rgba(196,149,90,0.3)",
-                    color: "#A8803F",
-                  }}
-                >
-                  السابق
-                </button>
-                <span className="text-sm" style={{ color: "#7A6550" }}>
-                  صفحة {pagination.currentPage} من {pagination.totalPages}
-                </span>
-                <button
-                  onClick={() => handlePageChange(pagination.currentPage + 1)}
-                  disabled={pagination.currentPage === pagination.totalPages}
-                  className="px-4 py-2 rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    background: "rgba(196,149,90,0.2)",
-                    border: "1px solid rgba(196,149,90,0.3)",
-                    color: "#A8803F",
-                  }}
-                >
-                  التالي
-                </button>
+            {uploadResult.success && (
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="p-5 rounded-xl shadow" style={{ background: "#D1FAE5", border: "2px solid #10B981" }}>
+                  <div className="text-4xl font-bold mb-2" style={{ color: "#065F46" }}>
+                    {uploadResult.created}
+                  </div>
+                  <div className="text-sm font-bold uppercase tracking-wide" style={{ color: "#059669" }}>
+                    عميل جديد
+                  </div>
+                </div>
+                <div className="p-5 rounded-xl shadow" style={{ background: "#FEF3C7", border: "2px solid #F59E0B" }}>
+                  <div className="text-4xl font-bold mb-2" style={{ color: "#92400E" }}>
+                    {uploadResult.updated}
+                  </div>
+                  <div className="text-sm font-bold uppercase tracking-wide" style={{ color: "#D97706" }}>
+                    عميل محدث
+                  </div>
+                </div>
+                <div className="p-5 rounded-xl shadow" style={{ background: "#F1F5F9", border: "2px solid #94A3B8" }}>
+                  <div className="text-4xl font-bold mb-2" style={{ color: "#334155" }}>
+                    {uploadResult.skipped}
+                  </div>
+                  <div className="text-sm font-bold uppercase tracking-wide" style={{ color: "#64748B" }}>
+                    تم تخطيه
+                  </div>
+                </div>
               </div>
             )}
-          </>
+
+            {uploadResult.errors && uploadResult.errors.length > 0 && (
+              <div className="mt-6 p-4 rounded-lg" style={{ background: "#FEE2E2", border: "2px solid #EF4444" }}>
+                <h3 className="font-bold mb-3 text-lg" style={{ color: "#991B1B" }}>
+                  الأخطاء ({uploadResult.total_errors}):
+                </h3>
+                <ul className="text-sm space-y-2 font-medium" style={{ color: "#DC2626" }}>
+                  {uploadResult.errors.map((error, idx) => (
+                    <li key={idx}>• {error}</li>
+                  ))}
+                  {uploadResult.total_errors > uploadResult.errors.length && (
+                    <li className="font-bold">
+                      ... و {uploadResult.total_errors - uploadResult.errors.length} أخطاء أخرى
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Add/Edit Modal */}
+        {showModal && (
+          <div
+            className="fixed inset-0 flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.6)", zIndex: 1000 }}
+            onClick={closeModal}
+          >
+            <div
+              className="w-full max-w-md p-8 rounded-2xl shadow-2xl"
+              style={{ background: "#FFF", border: "2px solid #E2E8F0" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-2xl font-bold mb-6" style={{ color: "#1E293B" }}>
+                {editingVip ? "تعديل عميل VIP" : "إضافة عميل VIP جديد"}
+              </h2>
+
+              {/* Name */}
+              <div className="mb-5">
+                <label className="block text-sm mb-2 font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>
+                  الاسم (اختياري)
+                </label>
+                <input
+                  type="text"
+                  value={modalData.full_name}
+                  onChange={(e) => setModalData({ ...modalData, full_name: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg font-medium"
+                  placeholder="محمد أحمد"
+                  style={{
+                    border: "2px solid #E2E8F0",
+                    background: "#FFFFFF",
+                    color: "#1E293B",
+                  }}
+                />
+              </div>
+
+              {/* Phone */}
+              <div className="mb-5">
+                <label className="block text-sm mb-2 font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>
+                  الجوال <span style={{ color: "#DC2626" }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={modalData.phone}
+                  onChange={(e) => setModalData({ ...modalData, phone: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg font-medium"
+                  placeholder="0501234567"
+                  disabled={!!editingVip}
+                  style={{
+                    border: "2px solid #E2E8F0",
+                    background: editingVip ? "#F1F5F9" : "#FFFFFF",
+                    color: "#1E293B",
+                  }}
+                />
+                {editingVip && (
+                  <p className="text-xs mt-2 font-medium" style={{ color: "#64748B" }}>
+                    لا يمكن تعديل رقم الجوال
+                  </p>
+                )}
+              </div>
+
+              {/* Email */}
+              <div className="mb-6">
+                <label className="block text-sm mb-2 font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>
+                  البريد الإلكتروني (اختياري)
+                </label>
+                <input
+                  type="email"
+                  value={modalData.email}
+                  onChange={(e) => setModalData({ ...modalData, email: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg font-medium"
+                  placeholder="example@email.com"
+                  style={{
+                    border: "2px solid #E2E8F0",
+                    background: "#FFFFFF",
+                    color: "#1E293B",
+                  }}
+                />
+              </div>
+
+              {/* Error */}
+              {modalError && (
+                <div
+                  className="mb-6 px-4 py-3 rounded-lg text-sm font-bold"
+                  style={{
+                    background: "#FEE2E2",
+                    border: "2px solid #EF4444",
+                    color: "#DC2626",
+                  }}
+                >
+                  {modalError}
+                </div>
+              )}
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleModalSave}
+                  disabled={modalSaving}
+                  className="flex-1 px-4 py-3 rounded-lg text-sm font-bold transition-all disabled:opacity-50 shadow-lg"
+                  style={{
+                    background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                    color: "#FFF",
+                    border: "2px solid #10B981",
+                  }}
+                >
+                  {modalSaving ? "جارٍ الحفظ..." : "💾 حفظ"}
+                </button>
+                <button
+                  onClick={closeModal}
+                  disabled={modalSaving}
+                  className="flex-1 px-4 py-3 rounded-lg text-sm font-bold transition-all shadow-lg"
+                  style={{
+                    background: "#F1F5F9",
+                    border: "2px solid #E2E8F0",
+                    color: "#64748B",
+                  }}
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
-
-      {/* Upload Section */}
-      <div className="mb-6 p-6 rounded-xl" style={{ background: "rgba(255,255,255,0.95)", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
-        <h3 className="text-lg font-bold mb-4" style={{ color: "#2C2416" }}>
-          رفع ملف Excel
-        </h3>
-
-        {/* Instructions */}
-        <div className="mb-6 p-4 rounded-lg" style={{ background: "rgba(228,183,122,0.1)", border: "1px solid rgba(196,149,90,0.3)" }}>
-          <h4 className="font-semibold mb-2" style={{ color: "#A8803F" }}>
-            تعليمات:
-          </h4>
-          <ul className="text-sm space-y-1" style={{ color: "#7A6550" }}>
-            <li>• يجب أن يحتوي الملف على الأعمدة التالية: <strong>الاسم</strong> أو <strong>Name</strong>، <strong>الجوال</strong> أو <strong>Phone</strong></li>
-            <li>• عمود <strong>البريد الإلكتروني</strong> أو <strong>Email</strong> اختياري</li>
-            <li>• رقم الجوال مطلوب ويجب أن يبدأ بـ 05 ويتكون من 10 أرقام</li>
-            <li>• الصف الأول يجب أن يحتوي على أسماء الأعمدة</li>
-            <li>• الصفوف الفارغة سيتم تجاهلها</li>
-          </ul>
-          <button
-            onClick={downloadTemplate}
-            className="mt-3 text-sm px-4 py-2 rounded-lg transition-all"
-            style={{
-              background: "rgba(196,149,90,0.2)",
-              border: "1px solid rgba(196,149,90,0.3)",
-              color: "#A8803F",
-            }}
-          >
-            تحميل نموذج Excel
-          </button>
-        </div>
-
-        {/* File Input */}
-        <div className="mb-4">
-          <label className="block text-sm mb-2 font-medium" style={{ color: "#7A6550" }}>
-            اختر ملف Excel
-          </label>
-          <input
-            id="excel-file-input"
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={handleFileChange}
-            className="block w-full text-sm"
-            style={{
-              padding: "12px",
-              border: "2px solid rgba(196,149,90,0.3)",
-              borderRadius: "8px",
-              background: "rgba(255,255,255,0.9)",
-              color: "#2C2416",
-            }}
-          />
-          {selectedFile && (
-            <p className="mt-2 text-sm" style={{ color: "#7A6550" }}>
-              الملف المحدد: <strong>{selectedFile.name}</strong>
-            </p>
-          )}
-        </div>
-
-        {/* Upload Button */}
-        <button
-          onClick={handleUpload}
-          disabled={!selectedFile || uploading}
-          className="px-6 py-3 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{
-            background: selectedFile && !uploading ? "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)" : "rgba(196,149,90,0.3)",
-            color: "#FFF",
-            boxShadow: selectedFile && !uploading ? "0 4px 12px rgba(228,183,122,0.3)" : "none",
-          }}
-        >
-          {uploading ? "جارٍ الرفع..." : "رفع الملف"}
-        </button>
-      </div>
-
-      {/* Results Section */}
-      {uploadResult && (
-        <div
-          className="p-6 rounded-xl"
-          style={{
-            background: uploadResult.success ? "rgba(102,187,106,0.1)" : "rgba(239,83,80,0.1)",
-            border: `2px solid ${uploadResult.success ? "rgba(102,187,106,0.3)" : "rgba(239,83,80,0.3)"}`,
-          }}
-        >
-          <h3
-            className="text-lg font-bold mb-4"
-            style={{ color: uploadResult.success ? "#2E7D32" : "#C62828" }}
-          >
-            {uploadResult.success ? "✓ نجحت العملية" : "✗ فشلت العملية"}
-          </h3>
-
-          <p className="mb-4" style={{ color: "#2C2416" }}>
-            {uploadResult.message}
-          </p>
-
-          {uploadResult.success && (
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="p-3 rounded-lg" style={{ background: "rgba(102,187,106,0.15)" }}>
-                <div className="text-2xl font-bold" style={{ color: "#2E7D32" }}>
-                  {uploadResult.created}
-                </div>
-                <div className="text-sm" style={{ color: "#7A6550" }}>
-                  عميل جديد
-                </div>
-              </div>
-              <div className="p-3 rounded-lg" style={{ background: "rgba(255,183,77,0.15)" }}>
-                <div className="text-2xl font-bold" style={{ color: "#E65100" }}>
-                  {uploadResult.updated}
-                </div>
-                <div className="text-sm" style={{ color: "#7A6550" }}>
-                  عميل محدث
-                </div>
-              </div>
-              <div className="p-3 rounded-lg" style={{ background: "rgba(158,158,158,0.15)" }}>
-                <div className="text-2xl font-bold" style={{ color: "#616161" }}>
-                  {uploadResult.skipped}
-                </div>
-                <div className="text-sm" style={{ color: "#7A6550" }}>
-                  تم تخطيه
-                </div>
-              </div>
-            </div>
-          )}
-
-          {uploadResult.errors && uploadResult.errors.length > 0 && (
-            <div className="mt-4">
-              <h4 className="font-semibold mb-2" style={{ color: "#C62828" }}>
-                الأخطاء ({uploadResult.total_errors}):
-              </h4>
-              <ul className="text-sm space-y-1" style={{ color: "#7A6550" }}>
-                {uploadResult.errors.map((error, idx) => (
-                  <li key={idx}>• {error}</li>
-                ))}
-                {uploadResult.total_errors > uploadResult.errors.length && (
-                  <li className="font-semibold">
-                    ... و {uploadResult.total_errors - uploadResult.errors.length} أخطاء أخرى
-                  </li>
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Add/Edit Modal */}
-      {showModal && (
-        <div
-          className="fixed inset-0 flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.5)", zIndex: 1000 }}
-          onClick={closeModal}
-        >
-          <div
-            className="w-full max-w-md p-6 rounded-xl"
-            style={{ background: "#FFF", boxShadow: "0 8px 24px rgba(0,0,0,0.2)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-xl font-bold mb-4" style={{ color: "#2C2416" }}>
-              {editingVip ? "تعديل عميل VIP" : "إضافة عميل VIP جديد"}
-            </h3>
-
-            {/* Name */}
-            <div className="mb-4">
-              <label className="block text-sm mb-2 font-medium" style={{ color: "#7A6550" }}>
-                الاسم (اختياري)
-              </label>
-              <input
-                type="text"
-                value={modalData.full_name}
-                onChange={(e) => setModalData({ ...modalData, full_name: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg text-sm"
-                placeholder="محمد أحمد"
-                style={{
-                  border: "2px solid rgba(196,149,90,0.3)",
-                  background: "rgba(255,255,255,0.9)",
-                  color: "#2C2416",
-                }}
-              />
-            </div>
-
-            {/* Phone */}
-            <div className="mb-4">
-              <label className="block text-sm mb-2 font-medium" style={{ color: "#7A6550" }}>
-                الجوال <span style={{ color: "#C62828" }}>*</span>
-              </label>
-              <input
-                type="text"
-                value={modalData.phone}
-                onChange={(e) => setModalData({ ...modalData, phone: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg text-sm"
-                placeholder="0501234567"
-                disabled={!!editingVip}
-                style={{
-                  border: "2px solid rgba(196,149,90,0.3)",
-                  background: editingVip ? "rgba(200,200,200,0.3)" : "rgba(255,255,255,0.9)",
-                  color: "#2C2416",
-                }}
-              />
-              {editingVip && (
-                <p className="text-xs mt-1" style={{ color: "#7A6550" }}>
-                  لا يمكن تعديل رقم الجوال
-                </p>
-              )}
-            </div>
-
-            {/* Email */}
-            <div className="mb-4">
-              <label className="block text-sm mb-2 font-medium" style={{ color: "#7A6550" }}>
-                البريد الإلكتروني (اختياري)
-              </label>
-              <input
-                type="email"
-                value={modalData.email}
-                onChange={(e) => setModalData({ ...modalData, email: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg text-sm"
-                placeholder="example@email.com"
-                style={{
-                  border: "2px solid rgba(196,149,90,0.3)",
-                  background: "rgba(255,255,255,0.9)",
-                  color: "#2C2416",
-                }}
-              />
-            </div>
-
-            {/* Error */}
-            {modalError && (
-              <div
-                className="mb-4 px-4 py-3 rounded-lg text-sm"
-                style={{
-                  background: "rgba(239,83,80,0.1)",
-                  border: "1px solid rgba(239,83,80,0.3)",
-                  color: "#C62828",
-                }}
-              >
-                {modalError}
-              </div>
-            )}
-
-            {/* Buttons */}
-            <div className="flex gap-3">
-              <button
-                onClick={handleModalSave}
-                disabled={modalSaving}
-                className="flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all disabled:opacity-50"
-                style={{
-                  background: "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)",
-                  color: "#FFF",
-                  boxShadow: "0 4px 12px rgba(228,183,122,0.3)",
-                }}
-              >
-                {modalSaving ? "جارٍ الحفظ..." : "حفظ"}
-              </button>
-              <button
-                onClick={closeModal}
-                disabled={modalSaving}
-                className="flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all"
-                style={{
-                  background: "rgba(196,149,90,0.2)",
-                  border: "1px solid rgba(196,149,90,0.3)",
-                  color: "#A8803F",
-                }}
-              >
-                إلغاء
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </ManagementLayout>
   );
 }

@@ -33,14 +33,14 @@ class DashboardStatsView(APIView):
 
         # VIP Statistics
         total_vips = VIPPhone.objects.count()
-        # Active bookings - VIP customers with upcoming scheduled appointments
+        # Active bookings - Total upcoming scheduled appointments for VIP customers
         vip_phones = VIPPhone.objects.values_list('phone', flat=True)
         active_bookings = BookingLog.objects.filter(
             provider=BookingLog.PROVIDER_CALENDLY,
             status=BookingLog.STATUS_SCHEDULED,
             scheduled_at__gte=now,
             phone__in=vip_phones
-        ).values('phone').distinct().count()
+        ).count()
 
         # Nomination Statistics
         pending_nominations = InvitedContact.objects.filter(approved=False).count()
@@ -75,11 +75,12 @@ class DashboardStatsView(APIView):
             status=BookingLog.STATUS_SCHEDULED
         ).count()
 
-        # This week's reservations (appointments happening this week)
+        # This week's reservations (appointments happening this week, up to now)
+        week_end = min(now, week_start + timedelta(days=7))
         week_reservations = BookingLog.objects.filter(
             provider=BookingLog.PROVIDER_CALENDLY,
             scheduled_at__gte=week_start,
-            scheduled_at__lt=week_start + timedelta(days=7),
+            scheduled_at__lt=week_end,
             status=BookingLog.STATUS_SCHEDULED
         ).count()
 

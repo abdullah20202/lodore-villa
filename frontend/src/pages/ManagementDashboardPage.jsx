@@ -1,15 +1,6 @@
 /**
- * /management/dashboard — Management Dashboard
- * Main dashboard for managing events, guests, and nominations
- *
- * Current Features:
- * - Guest Nominations Management
- *
- * Future Features (expandable):
- * - VIP Guest List Management
- * - Event Analytics
- * - Booking Management
- * - Communication Tools
+ * /management/nominations — Nominations Management
+ * Manage and track guest nominations from VIP customers
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -26,10 +17,10 @@ const STATUS_OPTIONS = [
 ];
 
 const STATUS_COLORS = {
-  pending: { bg: "#FFF8E1", border: "#FFB74D", text: "#E65100" },
-  contacted: { bg: "#E3F2FD", border: "#64B5F6", text: "#1565C0" },
-  invited: { bg: "#F3E5F5", border: "#BA68C8", text: "#6A1B9A" },
-  confirmed: { bg: "#E8F5E9", border: "#66BB6A", text: "#2E7D32" },
+  pending: { bg: "#FEF3C7", border: "#F59E0B", text: "#92400E" },
+  contacted: { bg: "#DBEAFE", border: "#3B82F6", text: "#1E40AF" },
+  invited: { bg: "#E9D5FF", border: "#9333EA", text: "#6B21A8" },
+  confirmed: { bg: "#D1FAE5", border: "#10B981", text: "#065F46" },
 };
 
 export default function ManagementDashboardPage() {
@@ -85,7 +76,6 @@ export default function ManagementDashboardPage() {
     try {
       const result = await updateNominationStatus(nominationId, newStatus);
       if (result.ok) {
-        // Update local state
         setNominations((prev) =>
           prev.map((n) => (n.id === nominationId ? { ...n, status: newStatus } : n))
         );
@@ -108,13 +98,10 @@ export default function ManagementDashboardPage() {
 
   const handleExportExcel = async () => {
     try {
-      // Prepare export parameters
       let exportParam = '';
       if (selectAllPages) {
-        // Export all pages with current filters
         exportParam = '&export_all=true';
       } else if (selectedRows.size > 0) {
-        // Export only selected rows
         const ids = Array.from(selectedRows).join(',');
         exportParam = `&ids=${ids}`;
       }
@@ -131,7 +118,6 @@ export default function ManagementDashboardPage() {
       );
 
       if (!response.ok) {
-        console.error('Export failed:', response.status, response.statusText);
         throw new Error('Export failed');
       }
 
@@ -145,7 +131,6 @@ export default function ManagementDashboardPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      // Clear selection after export
       setSelectedRows(new Set());
       setSelectAll(false);
       setSelectAllPages(false);
@@ -164,14 +149,13 @@ export default function ManagementDashboardPage() {
     } else {
       setSelectedRows(new Set());
     }
-    setSelectAllPages(false); // Deselect all pages when toggling current page
+    setSelectAllPages(false);
   };
 
   const handleSelectAllPages = (e) => {
     const checked = e.target.checked;
     setSelectAllPages(checked);
     if (checked) {
-      // When selecting all pages, clear individual row selections
       setSelectedRows(new Set());
       setSelectAll(false);
     }
@@ -186,7 +170,7 @@ export default function ManagementDashboardPage() {
     }
     setSelectedRows(newSelected);
     setSelectAll(newSelected.size === nominations.length);
-    setSelectAllPages(false); // Deselect all pages when selecting individual rows
+    setSelectAllPages(false);
   };
 
   const handleConvertToVIP = async () => {
@@ -221,7 +205,6 @@ export default function ManagementDashboardPage() {
         setSelectedRows(new Set());
         setSelectAll(false);
         setSelectAllPages(false);
-        // Reload nominations
         loadNominations();
       } else {
         alert(data.message || "فشل التحويل");
@@ -245,27 +228,33 @@ export default function ManagementDashboardPage() {
 
   return (
     <ManagementLayout username={username}>
-      {/* Section Title */}
-      <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-2" style={{ color: "#F5EFE7", textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
+      <div className="p-8 max-w-7xl mx-auto" style={{ background: "#F8FAFC", minHeight: "100vh" }}>
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2" style={{ color: "#1E293B" }}>
             ترشيحات الضيوف
-          </h2>
-          <p className="text-sm" style={{ color: "#E8DCC8", textShadow: "0 1px 4px rgba(0,0,0,0.2)" }}>
+          </h1>
+          <p className="text-lg font-medium" style={{ color: "#64748B" }}>
             إدارة ومتابعة ترشيحات الضيوف من عملاء VIP
           </p>
         </div>
 
         {/* Filters */}
-        <div className="mb-6 p-6 rounded-xl" style={{ background: "rgba(255,255,255,0.95)", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
+        <div className="mb-6 p-6 rounded-xl shadow-lg" style={{ background: "#FFFFFF", border: "2px solid #E2E8F0" }}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Search */}
             <div className="md:col-span-2">
-              <label className="block text-xs mb-2 font-medium" style={{ color: "#7A6550" }}>
+              <label className="block text-xs mb-2 font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>
                 البحث (الاسم أو رقم الجوال)
               </label>
               <input
                 type="text"
-                className="vip-input"
+                className="w-full px-4 py-3 rounded-lg border-2 font-medium transition-all"
+                style={{
+                  borderColor: "#E2E8F0",
+                  color: "#1E293B",
+                  background: "#FFFFFF",
+                }}
                 placeholder="ابحث بالاسم أو رقم الجوال..."
                 value={search}
                 onChange={(e) => {
@@ -277,11 +266,16 @@ export default function ManagementDashboardPage() {
 
             {/* Status Filter */}
             <div>
-              <label className="block text-xs mb-2 font-medium" style={{ color: "#7A6550" }}>
+              <label className="block text-xs mb-2 font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>
                 تصفية حسب الحالة
               </label>
               <select
-                className="vip-input"
+                className="w-full px-4 py-3 rounded-lg border-2 font-bold transition-all"
+                style={{
+                  borderColor: "#E2E8F0",
+                  color: "#1E293B",
+                  background: "#FFFFFF",
+                }}
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.target.value);
@@ -297,91 +291,71 @@ export default function ManagementDashboardPage() {
             </div>
           </div>
 
-          {/* Count and Export */}
-          <div className="mt-4 flex items-center justify-between gap-4">
+          {/* Count and Actions */}
+          <div className="mt-6 flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-4">
-              <div className="text-sm" style={{ color: "#7A6550" }}>
-                الإجمالي: <strong>{count}</strong> ترشيح
+              <div className="text-sm font-bold" style={{ color: "#334155" }}>
+                الإجمالي: <span style={{ color: "#2563EB" }}>{count}</span> ترشيح
                 {selectAllPages && (
-                  <span className="mr-3" style={{ color: "#C4955A" }}>
+                  <span className="mr-3" style={{ color: "#059669" }}>
                     • المحدد: <strong>الكل ({count})</strong>
                   </span>
                 )}
                 {!selectAllPages && selectedRows.size > 0 && (
-                  <span className="mr-3" style={{ color: "#C4955A" }}>
+                  <span className="mr-3" style={{ color: "#059669" }}>
                     • المحدد: <strong>{selectedRows.size}</strong>
                   </span>
                 )}
               </div>
 
               {/* Select All Pages Checkbox */}
-              <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: "#7A6550" }}>
+              <label className="flex items-center gap-2 text-sm font-bold cursor-pointer" style={{ color: "#64748B" }}>
                 <input
                   type="checkbox"
                   checked={selectAllPages}
                   onChange={handleSelectAllPages}
                   className="w-4 h-4 cursor-pointer"
-                  style={{ accentColor: "#C4955A" }}
+                  style={{ accentColor: "#3B82F6" }}
                 />
                 <span>تحديد الكل ({count})</span>
               </label>
             </div>
 
-            <button
-              onClick={handleExportExcel}
-              disabled={!selectAllPages && selectedRows.size === 0 && count > 0}
-              className="text-sm px-4 py-2 rounded-lg transition-all flex items-center gap-2"
-              style={{
-                background: (!selectAllPages && selectedRows.size === 0 && count > 0)
-                  ? "rgba(196,149,90,0.3)"
-                  : "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)",
-                color: "#FFFFFF",
-                border: "none",
-                boxShadow: "0 2px 8px rgba(196,149,90,0.3)",
-                cursor: (!selectAllPages && selectedRows.size === 0 && count > 0) ? "not-allowed" : "pointer",
-              }}
-              onMouseEnter={(e) => {
-                if (selectAllPages || selectedRows.size > 0 || count === 0) {
-                  e.target.style.transform = "translateY(-1px)";
-                  e.target.style.boxShadow = "0 4px 12px rgba(196,149,90,0.4)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = "translateY(0)";
-                e.target.style.boxShadow = "0 2px 8px rgba(196,149,90,0.3)";
-              }}
-            >
-              📥 تصدير المحدد (
-                {selectAllPages ? `الكل ${count}` : selectedRows.size > 0 ? selectedRows.size : 'اختر صفوف'}
-              )
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={handleExportExcel}
+                disabled={!selectAllPages && selectedRows.size === 0 && count > 0}
+                className="text-sm px-6 py-3 rounded-lg transition-all font-bold flex items-center gap-2 shadow-lg"
+                style={{
+                  background: (!selectAllPages && selectedRows.size === 0 && count > 0)
+                    ? "#CBD5E1"
+                    : "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
+                  color: "#FFFFFF",
+                  border: "2px solid #3B82F6",
+                  cursor: (!selectAllPages && selectedRows.size === 0 && count > 0) ? "not-allowed" : "pointer",
+                }}
+              >
+                📥 تصدير المحدد (
+                  {selectAllPages ? `الكل ${count}` : selectedRows.size > 0 ? selectedRows.size : 'اختر صفوف'}
+                )
+              </button>
 
-            <button
-              onClick={handleConvertToVIP}
-              disabled={selectedRows.size === 0}
-              className="text-sm px-4 py-2 rounded-lg transition-all flex items-center gap-2"
-              style={{
-                background: selectedRows.size === 0
-                  ? "rgba(102,187,106,0.3)"
-                  : "linear-gradient(135deg, #66BB6A 0%, #43A047 100%)",
-                color: "#FFFFFF",
-                border: "none",
-                boxShadow: "0 2px 8px rgba(102,187,106,0.3)",
-                cursor: selectedRows.size === 0 ? "not-allowed" : "pointer",
-              }}
-              onMouseEnter={(e) => {
-                if (selectedRows.size > 0) {
-                  e.target.style.transform = "translateY(-1px)";
-                  e.target.style.boxShadow = "0 4px 12px rgba(102,187,106,0.4)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = "translateY(0)";
-                e.target.style.boxShadow = "0 2px 8px rgba(102,187,106,0.3)";
-              }}
-            >
-              ⭐ تحويل إلى VIP ({selectedRows.size > 0 ? selectedRows.size : 'اختر صفوف'})
-            </button>
+              <button
+                onClick={handleConvertToVIP}
+                disabled={selectedRows.size === 0}
+                className="text-sm px-6 py-3 rounded-lg transition-all font-bold flex items-center gap-2 shadow-lg"
+                style={{
+                  background: selectedRows.size === 0
+                    ? "#CBD5E1"
+                    : "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                  color: "#FFFFFF",
+                  border: "2px solid #10B981",
+                  cursor: selectedRows.size === 0 ? "not-allowed" : "pointer",
+                }}
+              >
+                ⭐ تحويل إلى VIP ({selectedRows.size > 0 ? selectedRows.size : 'اختر صفوف'})
+              </button>
+            </div>
           </div>
         </div>
 
@@ -389,51 +363,51 @@ export default function ManagementDashboardPage() {
         {loading ? (
           <div className="text-center py-12">
             <div
-              className="w-10 h-10 mx-auto rounded-full border-2 animate-spin"
-              style={{ borderColor: "rgba(228,183,122,0.3)", borderTopColor: "#E4B77A" }}
+              className="w-16 h-16 mx-auto rounded-full border-4 border-t-transparent animate-spin"
+              style={{ borderColor: "#3B82F6", borderTopColor: "transparent" }}
             />
-            <p className="mt-4 text-sm" style={{ color: "#E8DCC8" }}>
+            <p className="mt-4 font-semibold" style={{ color: "#334155" }}>
               جاري التحميل...
             </p>
           </div>
         ) : nominations.length === 0 ? (
           <div
-            className="text-center py-12 rounded-xl"
-            style={{ background: "rgba(255,255,255,0.95)" }}
+            className="text-center py-12 rounded-xl shadow-lg"
+            style={{ background: "#FFFFFF", border: "2px solid #E2E8F0" }}
           >
-            <p style={{ color: "#7A6550" }}>لا توجد ترشيحات</p>
+            <p className="font-bold text-lg" style={{ color: "#64748B" }}>لا توجد ترشيحات</p>
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto rounded-xl" style={{ background: "rgba(255,255,255,0.95)" }}>
+            <div className="overflow-x-auto rounded-xl shadow-lg" style={{ background: "#FFFFFF", border: "2px solid #E2E8F0" }}>
               <table className="w-full">
                 <thead>
-                  <tr style={{ borderBottom: "2px solid rgba(196,149,90,0.2)" }}>
-                    <th className="px-4 py-3 text-center" style={{ color: "#7A6550", width: "50px" }}>
+                  <tr style={{ borderBottom: "2px solid #E2E8F0", background: "#F1F5F9" }}>
+                    <th className="px-4 py-4 text-center" style={{ color: "#334155", width: "50px" }}>
                       <input
                         type="checkbox"
                         checked={selectAll}
                         onChange={handleSelectAll}
                         className="w-4 h-4 cursor-pointer"
-                        style={{ accentColor: "#C4955A" }}
+                        style={{ accentColor: "#3B82F6" }}
                       />
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
                       اسم الضيف
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
                       رقم الضيف
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
                       المرشِّح
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
                       الحالة
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
                       تاريخ الإنشاء
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
                       إجراءات
                     </th>
                   </tr>
@@ -443,31 +417,31 @@ export default function ManagementDashboardPage() {
                     <tr
                       key={nom.id}
                       style={{
-                        borderBottom: "1px solid rgba(196,149,90,0.1)",
-                        background: selectedRows.has(nom.id) ? "rgba(228,183,122,0.1)" : "transparent"
+                        borderBottom: "1px solid #E2E8F0",
+                        background: selectedRows.has(nom.id) ? "#EFF6FF" : "transparent"
                       }}
                     >
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-4 py-4 text-center">
                         <input
                           type="checkbox"
                           checked={selectedRows.has(nom.id)}
                           onChange={() => handleSelectRow(nom.id)}
                           className="w-4 h-4 cursor-pointer"
-                          style={{ accentColor: "#C4955A" }}
+                          style={{ accentColor: "#3B82F6" }}
                         />
                       </td>
-                      <td className="px-4 py-3 text-sm" style={{ color: "#2C2416" }}>
+                      <td className="px-4 py-4 text-sm font-bold" style={{ color: "#1E293B" }}>
                         {nom.invited_name}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-mono" style={{ color: "#2C2416" }}>
+                          <span className="text-sm font-mono font-bold" style={{ color: "#1E293B" }}>
                             {nom.invited_phone}
                           </span>
                           <button
                             onClick={() => copyToClipboard(nom.invited_phone)}
-                            className="text-xs px-2 py-1 rounded"
-                            style={{ background: "rgba(196,149,90,0.1)", color: "#A8803F" }}
+                            className="text-xs px-2 py-1 rounded-lg font-bold"
+                            style={{ background: "#DBEAFE", color: "#1D4ED8", border: "1px solid #3B82F6" }}
                             title="نسخ"
                           >
                             📋
@@ -476,29 +450,29 @@ export default function ManagementDashboardPage() {
                             href={`https://wa.me/${nom.invited_phone.replace(/^0/, '966')}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs px-2 py-1 rounded"
-                            style={{ background: "rgba(37,211,102,0.1)", color: "#25D366" }}
+                            className="text-xs px-2 py-1 rounded-lg font-bold"
+                            style={{ background: "#D1FAE5", color: "#059669", border: "1px solid #10B981" }}
                             title="WhatsApp"
                           >
                             💬
                           </a>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm" style={{ color: "#7A6550" }}>
+                      <td className="px-4 py-4 text-sm" style={{ color: "#64748B" }}>
                         {nom.inviter_name ? (
                           <div>
-                            <div style={{ color: "#2C2416", fontWeight: "500" }}>{nom.inviter_name}</div>
-                            <div className="font-mono text-xs" style={{ color: "#9A8060" }}>{nom.inviter_phone}</div>
+                            <div className="font-bold" style={{ color: "#1E293B" }}>{nom.inviter_name}</div>
+                            <div className="font-mono text-xs" style={{ color: "#64748B" }}>{nom.inviter_phone}</div>
                           </div>
                         ) : (
-                          <div className="font-mono">{nom.inviter_phone}</div>
+                          <div className="font-mono font-bold">{nom.inviter_phone}</div>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4">
                         <select
                           value={nom.status}
                           onChange={(e) => handleStatusUpdate(nom.id, e.target.value)}
-                          className="text-xs px-3 py-1.5 rounded-lg border font-medium"
+                          className="text-xs px-3 py-2 rounded-lg border-2 font-bold"
                           style={{
                             background: STATUS_COLORS[nom.status]?.bg || "#FFF",
                             borderColor: STATUS_COLORS[nom.status]?.border || "#DDD",
@@ -511,14 +485,14 @@ export default function ManagementDashboardPage() {
                           <option value="confirmed">مؤكد</option>
                         </select>
                       </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: "#9A8060" }}>
+                      <td className="px-4 py-4 text-xs font-medium" style={{ color: "#64748B" }}>
                         {formatDate(nom.created_at)}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4">
                         {nom.approved && (
                           <span
-                            className="text-xs px-2 py-1 rounded"
-                            style={{ background: "rgba(76,175,80,0.1)", color: "#4CAF50" }}
+                            className="text-xs px-3 py-1 rounded-lg font-bold"
+                            style={{ background: "#D1FAE5", color: "#065F46", border: "1px solid #10B981" }}
                           >
                             ✓ تمت الموافقة
                           </span>
@@ -532,32 +506,32 @@ export default function ManagementDashboardPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-6 flex items-center justify-center gap-2">
+              <div className="mt-6 flex items-center justify-center gap-3">
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={page === 1}
-                  className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                  className="px-6 py-3 rounded-lg text-sm font-bold disabled:opacity-50 shadow-lg transition-all"
                   style={{
-                    background: "rgba(255,255,255,0.95)",
-                    color: "#A8803F",
-                    border: "1px solid rgba(196,149,90,0.3)",
+                    background: "#FFFFFF",
+                    color: "#2563EB",
+                    border: "2px solid #3B82F6",
                   }}
                 >
                   السابق
                 </button>
 
-                <span className="text-sm px-4" style={{ color: "#E8DCC8" }}>
+                <span className="text-sm px-4 font-bold" style={{ color: "#334155" }}>
                   صفحة {page} من {totalPages}
                 </span>
 
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={page === totalPages}
-                  className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                  className="px-6 py-3 rounded-lg text-sm font-bold disabled:opacity-50 shadow-lg transition-all"
                   style={{
-                    background: "rgba(255,255,255,0.95)",
-                    color: "#A8803F",
-                    border: "1px solid rgba(196,149,90,0.3)",
+                    background: "#FFFFFF",
+                    color: "#2563EB",
+                    border: "2px solid #3B82F6",
                   }}
                 >
                   التالي
@@ -566,6 +540,7 @@ export default function ManagementDashboardPage() {
             )}
           </>
         )}
+      </div>
     </ManagementLayout>
   );
 }

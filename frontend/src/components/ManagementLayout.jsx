@@ -42,44 +42,81 @@ export default function ManagementLayout({ children, username }) {
   };
 
   return (
-    <div className="min-h-screen" dir="rtl" style={{ background: "#FAF9F6" }}>
-      {/* Header */}
+    <div className="min-h-screen flex" dir="rtl" style={{ background: "#F8FAFC" }}>
+      {/* Sidebar */}
       <div
-        className="px-6 py-4 flex items-center justify-between"
+        className="w-64 min-h-screen flex flex-col"
         style={{
-          background: "rgba(255,255,255,0.95)",
-          borderBottom: "2px solid rgba(196,149,90,0.3)",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
+          background: "#FFFFFF",
+          borderLeft: "2px solid #E2E8F0",
+          boxShadow: "4px 0 12px rgba(0,0,0,0.05)",
         }}
       >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)" }}
-          >
-            <span className="text-white font-bold text-lg">ل</span>
-          </div>
-          <div>
-            <h1 className="text-xl font-bold" style={{ color: "#2C2416" }}>
-              لوحة الإدارة
-            </h1>
-            <p className="text-xs" style={{ color: "#7A6550" }}>
-              لودوريه فيلا - نظام الإدارة
-            </p>
+        {/* Logo/Brand */}
+        <div className="p-6 border-b-2" style={{ borderColor: "#E2E8F0" }}>
+          <div className="flex items-center gap-3 mb-2">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)" }}
+            >
+              <span className="text-white font-bold text-xl">ل</span>
+            </div>
+            <div>
+              <h1 className="text-lg font-bold" style={{ color: "#1E293B" }}>
+                لودوريه فيلا
+              </h1>
+              <p className="text-xs font-medium" style={{ color: "#64748B" }}>
+                نظام الإدارة
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <span className="text-sm" style={{ color: "#7A6550" }}>
-            {username}
-          </span>
+        {/* Navigation Menu */}
+        <div className="flex-1 p-4">
+          <nav className="space-y-2">
+            {menuItems.map((item) => (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className="w-full px-4 py-3 rounded-xl transition-all font-bold text-right flex items-center gap-3"
+                style={{
+                  background: isActive(item.path)
+                    ? "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)"
+                    : "transparent",
+                  color: isActive(item.path) ? "#FFFFFF" : "#64748B",
+                  border: isActive(item.path)
+                    ? "2px solid #3B82F6"
+                    : "2px solid transparent",
+                  boxShadow: isActive(item.path)
+                    ? "0 4px 12px rgba(59,130,246,0.3)"
+                    : "none",
+                }}
+              >
+                <span className="text-2xl">{item.icon}</span>
+                <span className="text-sm">{item.label}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* User Info & Logout */}
+        <div className="p-4 border-t-2" style={{ borderColor: "#E2E8F0" }}>
+          <div className="mb-3 px-4 py-2 rounded-lg" style={{ background: "#F1F5F9" }}>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "#64748B" }}>
+              المستخدم
+            </p>
+            <p className="text-sm font-bold" style={{ color: "#1E293B" }}>
+              {username}
+            </p>
+          </div>
           <button
             onClick={handleLogout}
-            className="text-sm px-4 py-2 rounded-lg transition-all"
+            className="w-full text-sm px-4 py-3 rounded-lg transition-all font-bold"
             style={{
-              background: "rgba(196,149,90,0.1)",
-              border: "1px solid rgba(196,149,90,0.3)",
-              color: "#A8803F",
+              background: "#FEE2E2",
+              border: "2px solid #EF4444",
+              color: "#DC2626",
             }}
           >
             تسجيل الخروج
@@ -87,34 +124,8 @@ export default function ManagementLayout({ children, username }) {
         </div>
       </div>
 
-      {/* Navigation Menu */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="flex gap-3 mb-6">
-          {menuItems.map((item) => (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className="px-6 py-3 rounded-xl transition-all font-medium"
-              style={{
-                background: isActive(item.path)
-                  ? "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)"
-                  : "rgba(255,255,255,0.95)",
-                color: isActive(item.path) ? "#FFFFFF" : "#7A6550",
-                border: isActive(item.path)
-                  ? "2px solid rgba(196,149,90,0.5)"
-                  : "2px solid rgba(196,149,90,0.2)",
-                boxShadow: isActive(item.path)
-                  ? "0 4px 16px rgba(228,183,122,0.3)"
-                  : "0 2px 8px rgba(0,0,0,0.05)",
-              }}
-            >
-              <span className="ml-2">{item.icon}</span>
-              {item.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Page Content */}
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
         {children}
       </div>
     </div>

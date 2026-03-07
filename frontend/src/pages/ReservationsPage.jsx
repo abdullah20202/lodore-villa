@@ -16,15 +16,14 @@ const STATUS_OPTIONS = [
 ];
 
 const STATUS_COLORS = {
-  scheduled: { bg: "#E8F5E9", border: "#66BB6A", text: "#2E7D32" },
-  canceled: { bg: "#FFEBEE", border: "#EF5350", text: "#C62828" },
-  rescheduled: { bg: "#FFF8E1", border: "#FFB74D", text: "#E65100" },
+  scheduled: { bg: "#D1FAE5", border: "#10B981", text: "#065F46" },
+  canceled: { bg: "#FEE2E2", border: "#EF4444", text: "#991B1B" },
+  rescheduled: { bg: "#FEF3C7", border: "#F59E0B", text: "#92400E" },
 };
 
 export default function ReservationsPage() {
   const navigate = useNavigate();
 
-  // Get today's date in local timezone
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -46,7 +45,6 @@ export default function ReservationsPage() {
   const [username, setUsername] = useState("");
 
   useEffect(() => {
-    // Check if user is logged in
     const managementUsername = localStorage.getItem("management_username");
     if (!managementUsername) {
       navigate("/management/login", { replace: true });
@@ -158,27 +156,33 @@ export default function ReservationsPage() {
 
   return (
     <ManagementLayout username={username}>
-      {/* Section Title */}
-      <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-2" style={{ color: "#F5EFE7", textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
+      <div className="p-8 max-w-7xl mx-auto" style={{ background: "#F8FAFC", minHeight: "100vh" }}>
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2" style={{ color: "#1E293B" }}>
             الحجوزات
-          </h2>
-          <p className="text-sm" style={{ color: "#E8DCC8", textShadow: "0 1px 4px rgba(0,0,0,0.2)" }}>
+          </h1>
+          <p className="text-lg font-medium" style={{ color: "#64748B" }}>
             عرض وإدارة جميع حجوزات Calendly
           </p>
         </div>
 
         {/* Filters */}
-        <div className="mb-6 p-6 rounded-xl" style={{ background: "rgba(255,255,255,0.95)", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
+        <div className="mb-6 p-6 rounded-xl shadow-lg" style={{ background: "#FFFFFF", border: "2px solid #E2E8F0" }}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Search */}
             <div className="md:col-span-2">
-              <label className="block text-xs mb-2 font-medium" style={{ color: "#7A6550" }}>
+              <label className="block text-xs mb-2 font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>
                 البحث (الاسم، الجوال، أو البريد الإلكتروني)
               </label>
               <input
                 type="text"
-                className="vip-input"
+                className="w-full px-4 py-3 rounded-lg border-2 font-medium transition-all"
+                style={{
+                  borderColor: "#E2E8F0",
+                  color: "#1E293B",
+                  background: "#FFFFFF",
+                }}
                 placeholder="ابحث..."
                 value={search}
                 onChange={(e) => {
@@ -190,11 +194,16 @@ export default function ReservationsPage() {
 
             {/* Status Filter */}
             <div>
-              <label className="block text-xs mb-2 font-medium" style={{ color: "#7A6550" }}>
+              <label className="block text-xs mb-2 font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>
                 تصفية حسب الحالة
               </label>
               <select
-                className="vip-input"
+                className="w-full px-4 py-3 rounded-lg border-2 font-bold transition-all"
+                style={{
+                  borderColor: "#E2E8F0",
+                  color: "#1E293B",
+                  background: "#FFFFFF",
+                }}
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.target.value);
@@ -211,78 +220,53 @@ export default function ReservationsPage() {
           </div>
 
           {/* Date Quick Filters */}
-          <div className="mt-4">
-            <label className="block text-xs mb-2 font-medium" style={{ color: "#7A6550" }}>
+          <div className="mt-6">
+            <label className="block text-xs mb-3 font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>
               تصفية حسب التاريخ
             </label>
             <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => handleQuickFilter("today")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${quickFilter === "today" ? "shadow-md" : ""}`}
-                style={{
-                  background: quickFilter === "today" ? "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)" : "rgba(196,149,90,0.1)",
-                  border: "1px solid rgba(196,149,90,0.3)",
-                  color: quickFilter === "today" ? "#FFF" : "#A8803F",
-                }}
-              >
-                اليوم
-              </button>
-              <button
-                onClick={() => handleQuickFilter("tomorrow")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${quickFilter === "tomorrow" ? "shadow-md" : ""}`}
-                style={{
-                  background: quickFilter === "tomorrow" ? "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)" : "rgba(196,149,90,0.1)",
-                  border: "1px solid rgba(196,149,90,0.3)",
-                  color: quickFilter === "tomorrow" ? "#FFF" : "#A8803F",
-                }}
-              >
-                غداً
-              </button>
-              <button
-                onClick={() => handleQuickFilter("week")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${quickFilter === "week" ? "shadow-md" : ""}`}
-                style={{
-                  background: quickFilter === "week" ? "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)" : "rgba(196,149,90,0.1)",
-                  border: "1px solid rgba(196,149,90,0.3)",
-                  color: quickFilter === "week" ? "#FFF" : "#A8803F",
-                }}
-              >
-                هذا الأسبوع
-              </button>
-              <button
-                onClick={() => handleQuickFilter("month")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${quickFilter === "month" ? "shadow-md" : ""}`}
-                style={{
-                  background: quickFilter === "month" ? "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)" : "rgba(196,149,90,0.1)",
-                  border: "1px solid rgba(196,149,90,0.3)",
-                  color: quickFilter === "month" ? "#FFF" : "#A8803F",
-                }}
-              >
-                هذا الشهر
-              </button>
-              <button
-                onClick={() => handleQuickFilter("all")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${quickFilter === "all" ? "shadow-md" : ""}`}
-                style={{
-                  background: quickFilter === "all" ? "linear-gradient(135deg, #E4B77A 0%, #C4955A 100%)" : "rgba(196,149,90,0.1)",
-                  border: "1px solid rgba(196,149,90,0.3)",
-                  color: quickFilter === "all" ? "#FFF" : "#A8803F",
-                }}
-              >
-                الكل
-              </button>
+              {["today", "tomorrow", "week", "month", "all"].map((filter) => {
+                const labels = {
+                  today: "اليوم",
+                  tomorrow: "غداً",
+                  week: "هذا الأسبوع",
+                  month: "هذا الشهر",
+                  all: "الكل"
+                };
+                return (
+                  <button
+                    key={filter}
+                    onClick={() => handleQuickFilter(filter)}
+                    className="px-5 py-2.5 rounded-lg text-sm font-bold transition-all shadow-md"
+                    style={{
+                      background: quickFilter === filter
+                        ? "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)"
+                        : "#F1F5F9",
+                      border: quickFilter === filter ? "2px solid #3B82F6" : "2px solid #E2E8F0",
+                      color: quickFilter === filter ? "#FFF" : "#64748B",
+                    }}
+                  >
+                    {labels[filter]}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Custom Date Range */}
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs mb-2 font-medium" style={{ color: "#7A6550" }}>
+              <label className="block text-xs mb-2 font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>
                 من تاريخ
               </label>
               <input
                 type="date"
-                className="vip-input"
+                className="w-full px-4 py-3 rounded-lg border-2 font-bold transition-all"
+                style={{
+                  borderColor: "#E2E8F0",
+                  color: "#1E293B",
+                  background: "#FFFFFF",
+                }}
                 value={dateFrom}
                 onChange={(e) => {
                   setDateFrom(e.target.value);
@@ -292,12 +276,17 @@ export default function ReservationsPage() {
               />
             </div>
             <div>
-              <label className="block text-xs mb-2 font-medium" style={{ color: "#7A6550" }}>
+              <label className="block text-xs mb-2 font-semibold uppercase tracking-wide" style={{ color: "#64748B" }}>
                 إلى تاريخ
               </label>
               <input
                 type="date"
-                className="vip-input"
+                className="w-full px-4 py-3 rounded-lg border-2 font-bold transition-all"
+                style={{
+                  borderColor: "#E2E8F0",
+                  color: "#1E293B",
+                  background: "#FFFFFF",
+                }}
                 value={dateTo}
                 onChange={(e) => {
                   setDateTo(e.target.value);
@@ -308,11 +297,9 @@ export default function ReservationsPage() {
             </div>
           </div>
 
-          {/* Count and Actions */}
-          <div className="mt-4">
-            <div className="text-sm" style={{ color: "#7A6550" }}>
-              الإجمالي: <strong>{count}</strong> حجز
-            </div>
+          {/* Count */}
+          <div className="mt-6 text-sm font-bold" style={{ color: "#334155" }}>
+            الإجمالي: <span style={{ color: "#2563EB" }}>{count}</span> حجز
           </div>
         </div>
 
@@ -320,39 +307,39 @@ export default function ReservationsPage() {
         {loading ? (
           <div className="text-center py-12">
             <div
-              className="w-10 h-10 mx-auto rounded-full border-2 animate-spin"
-              style={{ borderColor: "rgba(228,183,122,0.3)", borderTopColor: "#E4B77A" }}
+              className="w-16 h-16 mx-auto rounded-full border-4 border-t-transparent animate-spin"
+              style={{ borderColor: "#3B82F6", borderTopColor: "transparent" }}
             />
-            <p className="mt-4 text-sm" style={{ color: "#E8DCC8" }}>
+            <p className="mt-4 font-semibold" style={{ color: "#334155" }}>
               جاري التحميل...
             </p>
           </div>
         ) : reservations.length === 0 ? (
           <div
-            className="text-center py-12 rounded-xl"
-            style={{ background: "rgba(255,255,255,0.95)" }}
+            className="text-center py-12 rounded-xl shadow-lg"
+            style={{ background: "#FFFFFF", border: "2px solid #E2E8F0" }}
           >
-            <p style={{ color: "#7A6550" }}>لا توجد حجوزات</p>
+            <p className="font-bold text-lg" style={{ color: "#64748B" }}>لا توجد حجوزات</p>
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto rounded-xl" style={{ background: "rgba(255,255,255,0.95)" }}>
+            <div className="overflow-x-auto rounded-xl shadow-lg" style={{ background: "#FFFFFF", border: "2px solid #E2E8F0" }}>
               <table className="w-full">
                 <thead>
-                  <tr style={{ borderBottom: "2px solid rgba(196,149,90,0.2)" }}>
-                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                  <tr style={{ borderBottom: "2px solid #E2E8F0", background: "#F1F5F9" }}>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
                       اسم الضيف
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
                       رقم الجوال
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
                       البريد الإلكتروني
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
                       موعد الحجز
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold" style={{ color: "#7A6550" }}>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wide" style={{ color: "#334155" }}>
                       الحالة
                     </th>
                   </tr>
@@ -361,21 +348,21 @@ export default function ReservationsPage() {
                   {reservations.map((res) => (
                     <tr
                       key={res.id}
-                      style={{ borderBottom: "1px solid rgba(196,149,90,0.1)" }}
+                      style={{ borderBottom: "1px solid #E2E8F0" }}
                     >
-                      <td className="px-4 py-3 text-sm" style={{ color: "#2C2416" }}>
+                      <td className="px-4 py-4 text-sm font-bold" style={{ color: "#1E293B" }}>
                         {res.guest_name || "—"}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-mono" style={{ color: "#2C2416" }}>
+                          <span className="text-sm font-mono font-bold" style={{ color: "#1E293B" }}>
                             {res.phone || "—"}
                           </span>
                           {res.phone && (
                             <button
                               onClick={() => copyToClipboard(res.phone)}
-                              className="text-xs px-2 py-1 rounded"
-                              style={{ background: "rgba(196,149,90,0.1)", color: "#A8803F" }}
+                              className="text-xs px-2 py-1 rounded-lg font-bold"
+                              style={{ background: "#DBEAFE", color: "#1D4ED8", border: "1px solid #3B82F6" }}
                               title="نسخ"
                             >
                               📋
@@ -383,15 +370,15 @@ export default function ReservationsPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm" style={{ color: "#7A6550" }}>
+                      <td className="px-4 py-4 text-sm font-medium" style={{ color: "#64748B" }}>
                         {res.guest_email || "—"}
                       </td>
-                      <td className="px-4 py-3 text-sm" style={{ color: "#2C2416" }}>
+                      <td className="px-4 py-4 text-sm font-bold" style={{ color: "#1E293B" }}>
                         {formatDateTime(res.scheduled_at)}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4">
                         <span
-                          className="text-xs px-3 py-1.5 rounded-lg border font-medium inline-block"
+                          className="text-xs px-3 py-2 rounded-lg border-2 font-bold inline-block"
                           style={{
                             background: STATUS_COLORS[res.status]?.bg || "#FFF",
                             borderColor: STATUS_COLORS[res.status]?.border || "#DDD",
@@ -409,32 +396,32 @@ export default function ReservationsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-6 flex items-center justify-center gap-2">
+              <div className="mt-6 flex items-center justify-center gap-3">
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={page === 1}
-                  className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                  className="px-6 py-3 rounded-lg text-sm font-bold disabled:opacity-50 shadow-lg transition-all"
                   style={{
-                    background: "rgba(255,255,255,0.95)",
-                    color: "#A8803F",
-                    border: "1px solid rgba(196,149,90,0.3)",
+                    background: "#FFFFFF",
+                    color: "#2563EB",
+                    border: "2px solid #3B82F6",
                   }}
                 >
                   السابق
                 </button>
 
-                <span className="text-sm px-4" style={{ color: "#E8DCC8" }}>
+                <span className="text-sm px-4 font-bold" style={{ color: "#334155" }}>
                   صفحة {page} من {totalPages}
                 </span>
 
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={page === totalPages}
-                  className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                  className="px-6 py-3 rounded-lg text-sm font-bold disabled:opacity-50 shadow-lg transition-all"
                   style={{
-                    background: "rgba(255,255,255,0.95)",
-                    color: "#A8803F",
-                    border: "1px solid rgba(196,149,90,0.3)",
+                    background: "#FFFFFF",
+                    color: "#2563EB",
+                    border: "2px solid #3B82F6",
                   }}
                 >
                   التالي
@@ -443,6 +430,7 @@ export default function ReservationsPage() {
             )}
           </>
         )}
+      </div>
     </ManagementLayout>
   );
 }
