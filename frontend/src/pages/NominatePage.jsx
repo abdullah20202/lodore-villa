@@ -21,14 +21,21 @@ function convertArabicToEnglish(str) {
   }).join('');
 }
 
-/** Client-side phone normalizer */
+/** Client-side phone normalizer - must start with 05 */
 function normalizePhone(raw) {
   if (!raw) return null;
   let phone = convertArabicToEnglish(raw);
   phone = phone.replace(/[\s\-\(\)]/g, "").trim();
-  if (phone.startsWith("+")) phone = phone.slice(1);
-  if (phone.startsWith("966")) phone = "0" + phone.slice(3);
-  if (/^5\d{8}$/.test(phone)) phone = "0" + phone;
+
+  // Must start with 05 - reject other formats
+  if (!phone.startsWith("05") && !phone.startsWith("٠٥")) {
+    return null;
+  }
+
+  // If starts with Arabic ٠٥, convert it
+  phone = convertArabicToEnglish(phone);
+
+  // Must be exactly 10 digits starting with 05
   if (/^05\d{8}$/.test(phone)) return phone;
   return null;
 }
@@ -72,7 +79,7 @@ export default function NominatePage() {
 
       const normalizedPhone = normalizePhone(contact.phone);
       if (!normalizedPhone) {
-        setError(`رقم جوال غير صالح: ${contact.phone}. يرجى إدخال رقم سعودي صحيح`);
+        setError(`رقم جوال غير صالح: ${contact.phone}. يرجى إدخال رقم سعودي يبدأ بـ 05 ومكون من 10 أرقام`);
         return;
       }
 
@@ -87,7 +94,7 @@ export default function NominatePage() {
     if (submitterPhone.trim()) {
       normalizedSubmitterPhone = normalizePhone(submitterPhone);
       if (!normalizedSubmitterPhone) {
-        setError("رقم جوالك غير صالح. يرجى إدخال رقم سعودي صحيح أو اتركه فارغاً");
+        setError("رقم جوالك غير صالح. يرجى إدخال رقم سعودي يبدأ بـ 05 ومكون من 10 أرقام أو اتركه فارغاً");
         return;
       }
     }
@@ -244,7 +251,7 @@ export default function NominatePage() {
                     onChange={(e) => handleContactChange(index, "phone", e.target.value)}
                     autoComplete="tel"
                     inputMode="tel"
-                    maxLength={15}
+                    maxLength={10}
                     disabled={loading}
                     dir="ltr"
                   />
@@ -274,7 +281,7 @@ export default function NominatePage() {
                 onChange={(e) => setSubmitterPhone(e.target.value)}
                 autoComplete="tel"
                 inputMode="tel"
-                maxLength={15}
+                maxLength={10}
                 disabled={loading}
                 dir="ltr"
               />

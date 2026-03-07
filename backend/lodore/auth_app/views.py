@@ -1349,7 +1349,7 @@ class VisitorNominationsView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        submitter_phone = request.data.get("submitter_phone", "").strip()
+        submitter_phone = (request.data.get("submitter_phone") or "").strip()
         contacts = request.data.get("contacts", [])
 
         # Normalize submitter phone if provided
