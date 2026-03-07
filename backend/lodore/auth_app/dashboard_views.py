@@ -18,8 +18,10 @@ class DashboardStatsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Get current time
-        now = timezone.now()
+        # Get current time in Saudi Arabia timezone (UTC+3)
+        import pytz
+        saudi_tz = pytz.timezone('Asia/Riyadh')
+        now = timezone.now().astimezone(saudi_tz)
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         week_start = today_start - timedelta(days=today_start.weekday())
         month_start = today_start.replace(day=1)
@@ -53,26 +55,26 @@ class DashboardStatsView(APIView):
             status=BookingLog.STATUS_RESCHEDULED
         ).count()
 
-        # Today's reservations
+        # Today's reservations (received today, not scheduled for today)
         today_reservations = BookingLog.objects.filter(
             provider=BookingLog.PROVIDER_CALENDLY,
-            scheduled_at__gte=today_start,
-            scheduled_at__lt=today_start + timedelta(days=1),
+            received_at__gte=today_start,
+            received_at__lt=today_start + timedelta(days=1),
             status=BookingLog.STATUS_SCHEDULED
         ).count()
 
-        # This week's reservations
+        # This week's reservations (received this week)
         week_reservations = BookingLog.objects.filter(
             provider=BookingLog.PROVIDER_CALENDLY,
-            scheduled_at__gte=week_start,
-            scheduled_at__lt=week_start + timedelta(days=7),
+            received_at__gte=week_start,
+            received_at__lt=week_start + timedelta(days=7),
             status=BookingLog.STATUS_SCHEDULED
         ).count()
 
-        # This month's reservations
+        # This month's reservations (received this month)
         month_reservations = BookingLog.objects.filter(
             provider=BookingLog.PROVIDER_CALENDLY,
-            scheduled_at__gte=month_start,
+            received_at__gte=month_start,
             status=BookingLog.STATUS_SCHEDULED
         ).count()
 
@@ -90,15 +92,15 @@ class DashboardStatsView(APIView):
             created_at__gte=now - timedelta(days=7)
         ).count()
 
-        # Daily reservation trend (last 7 days)
+        # Daily reservation trend (last 7 days) - by received date
         daily_trend = []
         for i in range(6, -1, -1):
             day_start = today_start - timedelta(days=i)
             day_end = day_start + timedelta(days=1)
             count = BookingLog.objects.filter(
                 provider=BookingLog.PROVIDER_CALENDLY,
-                scheduled_at__gte=day_start,
-                scheduled_at__lt=day_end,
+                received_at__gte=day_start,
+                received_at__lt=day_end,
                 status=BookingLog.STATUS_SCHEDULED
             ).count()
             daily_trend.append({
