@@ -7,6 +7,7 @@
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import Logo from "../components/Logo";
 import SupportButton from "../components/SupportButton";
 import { submitVisitorNominations } from "../api/auth";
@@ -121,10 +122,23 @@ export default function NominatePage() {
   };
 
   return (
-    <div className="page-bg py-10 px-4" style={{ minHeight: "100vh" }}>
-      <div className="w-full max-w-md mx-auto">
-        {/* Logo */}
-        <Logo />
+    <>
+      <Helmet>
+        <title>لودوريه فيلا — ترشيحات خاصة</title>
+        <meta property="og:title" content="لودوريه فيلا — ترشيحات خاصة ومختارة بعناية" />
+        <meta property="og:description" content="معكم سلطان الشعيبي مؤسس لودوريه. نظرًا لكونكم من الذين سبق لهم الحجز لتجربة لودوريه فيلا، يسعدني استقبال ترشيحاتكم لأشخاص ترون أنهم يليقون بحضور هذه التجربة الخاصة." />
+        <meta property="og:url" content="https://villa.lodore.com/nominate" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://villa.lodore.com/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="لودوريه فيلا — ترشيحات خاصة ومختارة بعناية" />
+        <meta name="twitter:description" content="معكم سلطان الشعيبي مؤسس لودوريه. نظرًا لكونكم من الذين سبق لهم الحجز لتجربة لودوريه فيلا، يسعدني استقبال ترشيحاتكم لأشخاص ترون أنهم يليقون بحضور هذه التجربة الخاصة." />
+        <meta name="twitter:image" content="https://villa.lodore.com/og-image.jpg" />
+      </Helmet>
+      <div className="page-bg py-10 px-4" style={{ minHeight: "100vh" }}>
+        <div className="w-full max-w-md mx-auto">
+          {/* Logo */}
+          <Logo />
 
         {/* Invitation card */}
         <div className="luxury-card p-7 mb-4" style={{ textAlign: "right" }}>
@@ -327,9 +341,10 @@ export default function NominatePage() {
         <p className="text-center text-xs mt-6" style={{ color: "#E8DCC8", textShadow: "0 1px 3px rgba(0,0,0,0.3)" }}>
           شكراً لمشاركتك هذه التجربة
         </p>
-      </div>
+        </div>
 
-      <SupportButton />
-    </div>
+        <SupportButton />
+      </div>
+    </>
   );
 }
