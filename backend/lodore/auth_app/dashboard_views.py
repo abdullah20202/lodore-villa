@@ -23,7 +23,12 @@ class DashboardStatsView(APIView):
         saudi_tz = pytz.timezone('Asia/Riyadh')
         now = timezone.now().astimezone(saudi_tz)
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        week_start = today_start - timedelta(days=today_start.weekday())
+
+        # Week starts on Saturday in Saudi Arabia (weekday 5)
+        # 0=Monday, 1=Tuesday, 2=Wednesday, 3=Thursday, 4=Friday, 5=Saturday, 6=Sunday
+        days_since_saturday = (today_start.weekday() + 2) % 7
+        week_start = today_start - timedelta(days=days_since_saturday)
+
         month_start = today_start.replace(day=1)
 
         # VIP Statistics
