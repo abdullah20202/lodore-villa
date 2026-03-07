@@ -1331,3 +1331,122 @@ class DeleteVIPView(APIView):
                 {"ok": False, "message": f"حدث خطأ: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class VisitorNominationsView(APIView):
+    """
+    POST /api/auth/visitor-nominations
+    Public endpoint (no auth required) for visitors who already came.
+    body: {
+        "submitter_phone": "05xxxxxxxx" (optional),
+        "contacts": [{"name": "...", "phone": "..."}, ...] (max 3)
+    }
+
+    Allows anyone with the link to submit nominations.
+    Stores in same InvitedContact table with inviter_phone = submitter_phone or "VISITOR"
+    """
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        submitter_phone = request.data.get("submitter_phone", "").strip()
+        contacts = request.data.get("contacts", [])
+
+        # Normalize submitter phone if provided
+        normalized_submitter = None
+        if submitter_phone:
+            try:
+                normalized_submitter = normalize_phone(submitter_phone)
+            except ValueError:
+                return Response(
+                    {"ok": False, "message": "رقم جوالك غير صالح."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        # Use submitter phone or "VISITOR" as inviter
+        inviter_phone = normalized_submitter or "VISITOR"
+
+        # Validate input
+        if not isinstance(contacts, list):
+            return Response(
+                {"ok": False, "message": "يجب أن تكون جهات الاتصال قائمة."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if len(contacts) > 3:
+            return Response(
+                {"ok": False, "message": "يمكنك ترشيح 3 أشخاص كحد أقصى."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if len(contacts) == 0:
+            return Response(
+                {"ok": False, "message": "يرجى إضافة جهة اتصال واحدة على الأقل."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Process each contact
+        created_count = 0
+        errors = []
+
+        for contact in contacts:
+            name = contact.get("name", "").strip()
+            phone = contact.get("phone", "").strip()
+
+            if not name or not phone:
+                errors.append(f"الاسم ورقم الهاتف مطلوبان لكل جهة اتصال.")
+                continue
+
+            # Normalize phone
+            try:
+                normalized_phone = normalize_phone(phone)
+            except ValueError:
+                errors.append(f"رقم الهاتف {phone} غير صالح.")
+                continue
+
+            # Check if already invited by this inviter
+            if InvitedContact.objects.filter(
+                inviter_phone=inviter_phone, invited_phone=normalized_phone
+            ).exists():
+                errors.append(f"تم ترشيح {name} ({normalized_phone}) مسبقاً.")
+                continue
+
+            # Check if already a VIP
+            if VIPPhone.objects.filter(phone=normalized_phone).exists():
+                errors.append(f"{name} ({normalized_phone}) موجود بالفعل في قائمة VIP.")
+                continue
+
+            # Create invitation
+            InvitedContact.objects.create(
+                inviter_phone=inviter_phone,
+                invited_phone=normalized_phone,
+                invited_name=name,
+                approved=False,  # Requires admin approval
+            )
+            created_count += 1
+
+        if created_count == 0 and errors:
+            return Response(
+                {"ok": False, "message": " | ".join(errors)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        response_message = f"تم إرسال {created_count} ترشيح بنجاح. شكراً لمشاركتك."
+        if errors:
+            response_message += f" بعض الملاحظات: {' | '.join(errors)}"
+
+        logger.info(
+            "Visitor nominations submitted by %s: %s created, %s errors",
+            inviter_phone,
+            created_count,
+            len(errors),
+        )
+
+        return Response(
+            {
+                "ok": True,
+                "message": response_message,
+                "created": created_count,
+            },
+            status=status.HTTP_201_CREATED,
+        )

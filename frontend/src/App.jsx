@@ -5,6 +5,8 @@ import OTPPage from "./pages/OTPPage";
 import BookPage from "./pages/BookPage";
 import SuccessPage from "./pages/SuccessPage";
 import SorryPage from "./pages/SorryPage";
+import NominatePage from "./pages/NominatePage";
+import NominateSuccessPage from "./pages/NominateSuccessPage";
 import StaffLoginPage from "./pages/StaffLoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ManagementDashboardPage from "./pages/ManagementDashboardPage";
@@ -20,6 +22,8 @@ export default function App() {
         <Route path="/verify" element={<VerifyPage />} />
         <Route path="/otp" element={<OTPPage />} />
         <Route path="/sorry" element={<SorryPage />} />
+        <Route path="/nominate" element={<NominatePage />} />
+        <Route path="/nominate-success" element={<NominateSuccessPage />} />
 
         {/* Protected routes — require valid JWT */}
         <Route

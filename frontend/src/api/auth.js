@@ -57,3 +57,13 @@ export const submitInvitations = async (contacts) => {
   const { data } = await apiClient.post("/api/auth/invitations", { contacts });
   return data;
 };
+
+/**
+ * Submit nominations from visitors who already came (no auth required).
+ * @param {Object} payload - {submitter_phone?: string, contacts: Array<{name: string, phone: string}>}
+ * @returns {Promise<{ok: boolean, message: string, created: number}>}
+ */
+export const submitVisitorNominations = async (payload) => {
+  const { data } = await apiClient.post("/api/auth/visitor-nominations", payload);
+  return data;
+};

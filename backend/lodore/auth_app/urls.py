@@ -5,6 +5,7 @@ from .views import (
     TokenRefreshView,
     MeView,
     SubmitInvitationsView,
+    VisitorNominationsView,
     StaffLoginView,
     NominationsListView,
     UpdateNominationStatusView,
@@ -26,6 +27,7 @@ urlpatterns = [
     path("token/refresh", TokenRefreshView.as_view(), name="token-refresh"),
     path("me", MeView.as_view(), name="me"),
     path("invitations", SubmitInvitationsView.as_view(), name="invitations"),
+    path("visitor-nominations", VisitorNominationsView.as_view(), name="visitor-nominations"),
 
     # Management endpoints
     path("management/login", StaffLoginView.as_view(), name="staff-login"),
